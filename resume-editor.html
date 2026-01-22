@@ -3100,13 +3100,14 @@
             try {
                 let encoded;
                 if (passwordEnabled) {
-                    // Encrypt the data
+                    // Encrypt the data (compression happens inside encryptResumeData)
                     const encrypted = await encryptResumeData(data, password);
-                    encoded = 'v3:enc:' + encrypted;
+                    encoded = 'v4:enc:' + encrypted;
                 } else {
-                    // Plain encoding
+                    // Plain encoding with compression
                     const json = JSON.stringify(data);
-                    encoded = 'v3:plain:' + base64UrlEncode(json);
+                    const compressed = await compressData(json);
+                    encoded = 'v4:plain:' + arrayBufferToBase64Url(compressed);
                 }
 
                 const url = new URL(window.location.href);
@@ -3147,10 +3148,79 @@
             return decodeURIComponent(escape(atob(str)));
         }
 
+        // Compression utilities
+        async function compressData(str) {
+            try {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(str);
+                
+                // Use CompressionStream API if available
+                if (typeof CompressionStream !== 'undefined') {
+                    const stream = new Response(data).body.pipeThrough(new CompressionStream('gzip'));
+                    const compressed = await new Response(stream).arrayBuffer();
+                    return new Uint8Array(compressed);
+                } else {
+                    // Fallback: return original data if compression not available
+                    console.warn('CompressionStream not available, using uncompressed data');
+                    return data;
+                }
+            } catch (error) {
+                console.error('Compression error:', error);
+                return new TextEncoder().encode(str);
+            }
+        }
+
+        async function decompressData(compressedData) {
+            try {
+                // Use DecompressionStream API if available
+                if (typeof DecompressionStream !== 'undefined') {
+                    const stream = new Response(compressedData).body.pipeThrough(new DecompressionStream('gzip'));
+                    const decompressed = await new Response(stream).arrayBuffer();
+                    const decoder = new TextDecoder();
+                    return decoder.decode(decompressed);
+                } else {
+                    // Fallback: assume it's uncompressed
+                    const decoder = new TextDecoder();
+                    return decoder.decode(compressedData);
+                }
+            } catch (error) {
+                console.error('Decompression error:', error);
+                // Try decoding directly in case it wasn't compressed
+                const decoder = new TextDecoder();
+                return decoder.decode(compressedData);
+            }
+        }
+
+        function arrayBufferToBase64Url(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            const base64 = btoa(binary);
+            return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        }
+
+        function base64UrlToArrayBuffer(base64Url) {
+            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            while (base64.length % 4) {
+                base64 += '=';
+            }
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return bytes;
+        }
+
         async function encryptResumeData(data, password) {
             const json = JSON.stringify(data);
+            
+            // First compress the JSON
+            const compressedData = await compressData(json);
+            
             const encoder = new TextEncoder();
-            const dataBuffer = encoder.encode(json);
 
             // Generate salt for key derivation
             const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -3180,11 +3250,11 @@
             // Generate IV
             const iv = crypto.getRandomValues(new Uint8Array(12));
 
-            // Encrypt
+            // Encrypt the compressed data
             const encrypted = await crypto.subtle.encrypt(
                 { name: 'AES-GCM', iv: iv },
                 key,
-                dataBuffer
+                compressedData
             );
 
             // Combine salt + iv + encrypted data
@@ -3194,7 +3264,7 @@
             combined.set(new Uint8Array(encrypted), salt.length + iv.length);
 
             // Convert to base64url
-            return base64UrlEncode(String.fromCharCode(...combined));
+            return arrayBufferToBase64Url(combined);
         }
 
         async function decryptResumeData(encryptedData, password) {
@@ -3202,7 +3272,7 @@
             const decoder = new TextDecoder();
 
             // Decode from base64url
-            const combined = Uint8Array.from(base64UrlDecode(encryptedData), c => c.charCodeAt(0));
+            const combined = base64UrlToArrayBuffer(encryptedData);
 
             // Extract salt, iv, and encrypted data
             const salt = combined.slice(0, 16);
@@ -3238,7 +3308,8 @@
                 encrypted
             );
 
-            const json = decoder.decode(decrypted);
+            // Decompress the decrypted data
+            const json = await decompressData(new Uint8Array(decrypted));
             return JSON.parse(json);
         }
 
@@ -3249,9 +3320,10 @@
 
             if (resumeParam) {
                 try {
-                    if (resumeParam.startsWith('v3:enc:') || resumeParam.startsWith('v2:enc:')) {
-                        // Encrypted resume
-                        const encryptedData = resumeParam.substring(7); // Both v2 and v3 have same offset
+                    // Handle v4 format (compressed)
+                    if (resumeParam.startsWith('v4:enc:')) {
+                        // Encrypted and compressed resume
+                        const encryptedData = resumeParam.substring(7);
                         const password = prompt('This resume is password protected. Enter password:');
                         
                         if (password) {
@@ -3262,9 +3334,30 @@
                                 alert('Incorrect password or corrupted data');
                             }
                         }
+                    } else if (resumeParam.startsWith('v4:plain:')) {
+                        // Plain compressed resume
+                        const compressedData = base64UrlToArrayBuffer(resumeParam.substring(9));
+                        const json = await decompressData(compressedData);
+                        const data = JSON.parse(json);
+                        loadResumeFromData(data);
+                    }
+                    // Handle v3 format (uncompressed - backward compatibility)
+                    else if (resumeParam.startsWith('v3:enc:') || resumeParam.startsWith('v2:enc:')) {
+                        // Legacy encrypted resume (uncompressed)
+                        const encryptedData = resumeParam.substring(7);
+                        const password = prompt('This resume is password protected. Enter password:');
+                        
+                        if (password) {
+                            try {
+                                // Try v3/v2 decryption (without decompression)
+                                const data = await decryptResumeDataLegacy(encryptedData, password);
+                                loadResumeFromData(data);
+                            } catch (error) {
+                                alert('Incorrect password or corrupted data');
+                            }
+                        }
                     } else if (resumeParam.startsWith('v3:plain:') || resumeParam.startsWith('v2:plain:')) {
-                        // Plain resume
-                        const encryptedOffset = resumeParam.startsWith('v3:') ? 9 : 9; // Same offset
+                        // Legacy plain resume (uncompressed)
                         const encodedData = resumeParam.substring(9);
                         const json = base64UrlDecode(encodedData);
                         const data = JSON.parse(json);
@@ -3278,6 +3371,52 @@
                 }
             }
         });
+
+        // Legacy decryption for v2/v3 format (without compression)
+        async function decryptResumeDataLegacy(encryptedData, password) {
+            const encoder = new TextEncoder();
+            const decoder = new TextDecoder();
+
+            // Decode from base64url (old method)
+            const combined = Uint8Array.from(base64UrlDecode(encryptedData), c => c.charCodeAt(0));
+
+            // Extract salt, iv, and encrypted data
+            const salt = combined.slice(0, 16);
+            const iv = combined.slice(16, 28);
+            const encrypted = combined.slice(28);
+
+            // Derive key from password
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw',
+                encoder.encode(password),
+                'PBKDF2',
+                false,
+                ['deriveBits', 'deriveKey']
+            );
+
+            const key = await crypto.subtle.deriveKey(
+                {
+                    name: 'PBKDF2',
+                    salt: salt,
+                    iterations: 100000,
+                    hash: 'SHA-256'
+                },
+                keyMaterial,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['decrypt']
+            );
+
+            // Decrypt (no decompression for legacy format)
+            const decrypted = await crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv: iv },
+                key,
+                encrypted
+            );
+
+            const json = decoder.decode(decrypted);
+            return JSON.parse(json);
+        }
 
         function loadResumeFromData(data) {
             // Migrate data if needed
