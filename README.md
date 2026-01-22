@@ -4,7 +4,9 @@ An interactive resume editor built with Claude.
 
 I recently wanted to refresh my resume but the thought of fighting LibreOffice formatting lead me to spend a few hours experimenting using Claude to import my formatting I've used over the years to provide a rich interactive editor to make adjustments. 
 
-No license or warrantee provided. Use at your own risk.
+Access the app at https://rdlaitila.github.io/myresume
+
+No license or warrantee provided.
 
 # Claude's Docs
 
