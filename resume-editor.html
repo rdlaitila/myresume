@@ -1,0 +1,4378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Resume Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 850px;
+            gap: 20px;
+        }
+
+        .editor-panel {
+            background: white;
+            padding: 0 30px 30px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .resume-preview {
+            background: #e0e0e0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .resume-page {
+            background: white;
+            width: 8.5in;
+            min-height: 11in;
+            padding: 0.35in;
+            margin: 0 auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .resume-page:not(:last-child) {
+            margin-bottom: 20px;
+        }
+
+        .resume-page::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #ccc;
+        }
+
+        @page {
+            size: letter;
+            margin: 0;
+        }
+
+        @media print, (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .editor-panel {
+                display: none;
+            }
+        }
+
+        .btn {
+            background: #4472c4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            min-width: 140px;
+        }
+
+        .btn:hover {
+            background: #365a9e;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #70AD47;
+        }
+
+        .btn-success:hover {
+            background: #5a8c38;
+        }
+
+        .btn-icon-top {
+            background: #4472c4;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 3px;
+            min-width: unset;
+            position: relative;
+        }
+
+        .btn-icon-top:hover {
+            background: #365a9e;
+        }
+
+        .btn-icon-top:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-icon-top.btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-icon-top.btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-icon-top.btn-success {
+            background: #70AD47;
+        }
+
+        .btn-icon-top.btn-success:hover {
+            background: #5a8c38;
+        }
+
+        .btn-icon-top[data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 5px;
+            pointer-events: none;
+        }
+
+        .btn-icon-top[data-tooltip]:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            margin-bottom: -5px;
+            pointer-events: none;
+        }
+
+        .btn-icon-top {
+            background: #4472c4;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 3px;
+            min-width: unset;
+            position: relative;
+        }
+
+        .btn-icon-top:hover {
+            background: #365a9e;
+        }
+
+        .btn-icon-top:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-icon-top.btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-icon-top.btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-icon-top.btn-success {
+            background: #70AD47;
+        }
+
+        .btn-icon-top.btn-success:hover {
+            background: #5a8c38;
+        }
+
+        .btn-icon-top[data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 5px;
+            pointer-events: none;
+        }
+
+        .btn-icon-top[data-tooltip]:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            margin-bottom: -5px;
+            pointer-events: none;
+        }
+
+        .btn-icon {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-icon:hover {
+            background: #5a6268;
+        }
+
+        .btn-icon:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-icon.btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-icon.btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-icon.btn-success {
+            background: #70AD47;
+        }
+
+        .btn-icon.btn-success:hover {
+            background: #5a8c38;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section h2 {
+            color: #4472c4;
+            border-bottom: 2px solid #4472c4;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .experience-item,
+        .skill-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 3px solid #70AD47;
+        }
+
+        .experience-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .experience-header h3 {
+            margin: 0;
+            font-size: 14px;
+            color: #333;
+            flex: 1;
+        }
+
+        .experience-controls {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .experience-content {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .experience-content.expanded {
+            display: block;
+        }
+
+        .collapse-icon {
+            transition: transform 0.2s;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .collapse-icon.expanded {
+            transform: rotate(90deg);
+        }
+
+        /* Resume Preview Styles */
+        #preview {
+            font-size: 9pt;
+            line-height: 1.4;
+            color: #333;
+        }
+
+        #preview h1 {
+            font-size: 20pt;
+            margin-bottom: 0;
+            color: #000;
+        }
+
+        #preview .contact-info {
+            font-size: 8pt;
+            color: #666;
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        #preview .contact-info span {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        #preview .section-header {
+            font-size: 12pt;
+            font-weight: bold;
+            border-bottom: 1px solid #4472c4;
+            color: #4472c4;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            padding-bottom: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        #preview .section-header-years {
+            font-size: 8pt;
+            font-weight: normal;
+            color: #666;
+        }
+
+        #preview .job-header {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            margin-bottom: 5px;
+        }
+
+        #preview .job-title {
+            font-weight: bold;
+            color: #70AD47;
+            font-size: 10pt;
+        }
+
+        #preview .company {
+            color: #70AD47;
+            font-size: 9pt;
+        }
+
+        #preview .date {
+            text-align: right;
+            font-size: 8pt;
+            color: #666;
+        }
+
+        #preview .job-description {
+            color: #333;
+            font-size: 8pt;
+            margin-bottom: 10px;
+            text-align: justify;
+        }
+
+        #preview .summary {
+            color: #333;
+            font-size: 8pt;
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+
+        #preview .skills-section {
+            font-size: 8pt;
+            margin-bottom: 8px;
+        }
+
+        #preview .skills-section strong {
+            color: #000;
+        }
+
+        #preview .skills-list {
+            color: #333;
+            display: inline;
+        }
+
+        #preview .resume-footer {
+            text-align: left;
+            font-size: 6pt;
+            color: #ccc;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        #preview .resume-footer a {
+            color: #ccc;
+            text-decoration: none;
+        }
+
+        .controls {
+            position: sticky;
+            top: 0;
+            background: white;
+            padding: 0 15px 15px 15px;
+            margin: 0 -30px 30px -30px;
+            border-bottom: 2px solid #eee;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .welcome-dialog {
+            background: white;
+            padding: 60px;
+            border-radius: 8px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+            text-align: center;
+            max-width: 600px;
+            margin: 100px auto;
+        }
+
+        .welcome-dialog h1 {
+            color: #4472c4;
+            margin-bottom: 20px;
+        }
+
+        .welcome-dialog p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .welcome-actions .btn {
+            font-size: 16px;
+            padding: 15px 30px;
+        }
+
+        .version-history {
+            margin-top: 40px;
+            text-align: left;
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: visible;
+        }
+
+        .version-history h2 {
+            color: #4472c4;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .version-item {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border-radius: 4px;
+            border-left: 3px solid #4472c4;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .version-item:hover {
+            background: #e9ecef;
+        }
+
+        .version-info {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .version-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .version-time {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .version-actions {
+            display: flex;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 11px;
+            min-width: auto;
+        }
+
+        .resume-group {
+            margin-bottom: 15px;
+            position: relative;
+            overflow: visible;
+        }
+
+        .resume-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: 4px;
+            border-left: 3px solid #4472c4;
+        }
+
+        .resume-group-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .resume-group-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .resume-group-meta {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .resume-group-actions {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .version-dropdown {
+            position: relative;
+            display: inline-flex;
+        }
+
+        .btn-group {
+            display: inline-flex;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .btn-group .btn {
+            margin: 0;
+            border-radius: 0;
+        }
+
+        .btn-group .btn:first-child {
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+
+        .btn-group .btn:last-child {
+            border-top-right-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+
+        .btn-group .dropdown-toggle {
+            border-left: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 6px 8px;
+            min-width: auto;
+        }
+
+        .dropdown-toggle {
+            background: #70AD47;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .dropdown-toggle:hover {
+            background: #5a8c38;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: fixed;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            min-width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9fa;
+        }
+
+        .dropdown-item-time {
+            color: #666;
+            font-size: 11px;
+            margin-top: 2px;
+        }
+
+        .version-nav {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 11px;
+            color: #999;
+            padding: 20px 0;
+            margin-top: 30px;
+        }
+
+        .footer a {
+            color: #999;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: #4472c4;
+            text-decoration: underline;
+        }
+
+        .status-bar {
+            background: #f8f9fa;
+            padding: 8px 15px;
+            margin: 0 -15px 10px -15px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-label {
+            flex: 1;
+        }
+
+        .status-modified {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .status-saved {
+            color: #70AD47;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.hidden {
+            display: none !important;
+        }
+
+        .modal-dialog {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-dialog h3 {
+            color: #4472c4;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .modal-dialog p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .modal-dialog select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* AI Chat Styles */
+        .ai-chat-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ai-chat-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .ai-chat-window {
+            position: fixed;
+            bottom: 100px;
+            left: 20px;
+            width: 420px;
+            height: 600px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .ai-chat-window.hidden {
+            display: none;
+        }
+
+        .ai-chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .ai-chat-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .ai-chat-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.8;
+        }
+
+        .ai-chat-close:hover {
+            opacity: 1;
+        }
+
+        .ai-chat-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .ai-chat-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ai-message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+
+        .ai-message.user {
+            background: #667eea;
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .ai-message.assistant {
+            background: white;
+            color: #333;
+            align-self: flex-start;
+            border: 1px solid #e0e0e0;
+        }
+
+        .ai-message.system {
+            background: #fff3cd;
+            color: #856404;
+            align-self: center;
+            text-align: center;
+            font-size: 13px;
+            border: 1px solid #ffeaa7;
+        }
+
+        .ai-setup-screen {
+            text-align: center;
+        }
+
+        .ai-setup-screen h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .ai-setup-screen p {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .ai-providers {
+            display: grid;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .ai-provider-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.2s;
+        }
+
+        .ai-provider-item:hover {
+            border-color: #667eea;
+        }
+
+        .ai-provider-item.connected {
+            border-color: #70AD47;
+            background: #f0f8f0;
+        }
+
+        .ai-provider-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .ai-provider-status {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .ai-provider-status.connected {
+            color: #70AD47;
+        }
+
+        .ai-provider-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .ai-config-form {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .ai-config-form h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .ai-config-form label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .ai-config-form input,
+        .ai-config-form select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .ai-config-form .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .ai-chat-controls {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .ai-provider-select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+        }
+
+        .ai-chat-controls select {
+            flex: 0 0 auto;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .ai-chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: none;
+            min-height: 40px;
+            max-height: 100px;
+            font-family: inherit;
+        }
+
+        .ai-send-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .ai-send-button:hover {
+            background: #5568d3;
+        }
+
+        .ai-send-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+            .resume-preview {
+                background: white;
+                padding: 0;
+                box-shadow: none;
+                max-height: none;
+            }
+            .resume-page {
+                box-shadow: none;
+                margin: 0 !important;
+                padding: 0.35in !important;
+                width: 100% !important;
+                height: 100%;
+                page-break-after: always;
+                page-break-inside: avoid;
+                box-sizing: border-box;
+            }
+            .resume-page:last-child {
+                page-break-after: auto;
+            }
+            .resume-page::after {
+                display: none;
+            }
+            .ai-chat-button,
+            .ai-chat-window {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="welcomeDialog" class="welcome-dialog">
+        <h1>📝 Interactive Resume Editor</h1>
+        <p>Create and manage your professional resume with ease</p>
+        <div class="welcome-actions">
+            <button class="btn btn-success" onclick="createNewResume()">✨ Create New Resume</button>
+            <button class="btn" onclick="loadFromFile()">📁 Load Existing Resume</button>
+        </div>
+        <div id="versionHistory" class="version-history hidden">
+            <h2>Recent</h2>
+            <div id="versionList"></div>
+        </div>
+        <p style="margin-top: 40px; margin-bottom: 0; font-size: 12px; color: #999;">🔒 All data is stored locally in your browser.</p>
+    </div>
+
+    <div id="mainContainer" class="container hidden">
+        <div class="editor-panel">
+            <div class="controls">
+                <div class="status-bar">
+                    <div class="status-label">
+                        <span id="statusFile" onclick="editFileName()" style="cursor: pointer; text-decoration: underline;" title="Click to rename">No file loaded</span>
+                        <span id="statusModified" class="status-modified hidden"> • Modified</span>
+                        <span id="statusSaved" class="status-saved hidden"> • Saved</span>
+                        <span id="statusVersion" style="color: #999; font-size: 11px;"></span>
+                    </div>
+                    <div class="version-nav">
+                        <button class="btn-icon" id="prevVersion" onclick="loadPreviousVersion()" title="Previous Version" disabled>◄</button>
+                        <button class="btn-icon" id="nextVersion" onclick="loadNextVersion()" title="Next Version" disabled>►</button>
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="exportToPDF()">�️ Print / Save as PDF</button>
+                <button class="btn-icon-top" onclick="saveToFile()" data-tooltip="Save">💾</button>
+                <button class="btn-icon-top" onclick="downloadCopy()" data-tooltip="Download Copy">⬇️</button>
+                <button class="btn-icon-top" onclick="openShareModal()" data-tooltip="Share">🔗</button>
+                <button class="btn-icon-top" onclick="loadFromFile()" data-tooltip="Open File">📁</button>
+                <button class="btn-icon-top btn-danger" onclick="closeResume()" data-tooltip="Close">✖</button>
+                <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="handleFileLoad(event)">
+            </div>
+
+            <div class="section">
+                <h2>Personal Information</h2>
+                <label>Full Name</label>
+                <input type="text" id="name" oninput="updatePreview(); markModified()" value="">
+                
+                <label>Tag Line</label>
+                <input type="text" id="tagline" oninput="updatePreview(); markModified()" value="" placeholder="e.g., Full-Stack Developer & Cloud Enthusiast">
+            </div>
+
+            <div class="section">
+                <h2>Contact Information <button class="btn-icon btn-success" onclick="addContactInfo()">+</button></h2>
+                <div id="contactItems"></div>
+            </div>
+
+            <div class="section">
+                <h2>Summary</h2>
+                <textarea id="summary" oninput="updatePreview(); markModified()"></textarea>
+            </div>
+
+            <div class="section" id="dynamicSectionsContainer">
+                <h2>Sections <button class="btn-icon btn-success" onclick="addDynamicSection()">+</button></h2>
+                <div id="dynamicSections"></div>
+            </div>
+        </div>
+
+        <div class="resume-preview">
+            <div id="preview"></div>
+        </div>
+    </div>
+
+    <div id="closeModal" class="modal-overlay hidden">
+        <div class="modal-dialog">
+            <h3>Close Resume</h3>
+            <p>Are you sure you want to close this resume?</p>
+            <p style="font-size: 12px; color: #999; margin-top: 10px;">Note: All changes are automatically saved to your browser.</p>
+            <div class="modal-actions">
+                <button class="btn" onclick="handleCloseCancel()">Cancel</button>
+                <button class="btn btn-danger" onclick="handleCloseConfirm()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="renameModal" class="modal-overlay hidden">
+        <div class="modal-dialog">
+            <h3>Rename Resume</h3>
+            <p>Enter new name:</p>
+            <input type="text" id="newFileName" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+            <p>What would you like to do?</p>
+            <select id="renameAction">
+                <option value="all">Rename all previous versions</option>
+                <option value="new">Create new resume (start fresh history)</option>
+            </select>
+            <div class="modal-actions">
+                <button class="btn" onclick="handleRenameCancel()">Cancel</button>
+                <button class="btn btn-success" onclick="handleRenameConfirm()">Rename</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="shareModal" class="modal-overlay hidden">
+        <div class="modal-dialog" style="max-width: 600px;">
+            <h3>Share Resume</h3>
+            <p>Generate a shareable link for this resume:</p>
+            
+            <div style="margin: 15px 0;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="sharePasswordEnabled" onchange="toggleSharePassword()">
+                    <span>Password protect this link</span>
+                </label>
+            </div>
+            
+            <div id="sharePasswordSection" class="hidden" style="margin: 15px 0;">
+                <label style="display: block; margin-bottom: 5px; font-size: 13px;">Password:</label>
+                <input type="password" id="sharePassword" placeholder="Enter password" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                <p style="font-size: 11px; color: #666; margin-top: 5px;">Recipients will need this password to view the resume.</p>
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <button class="btn btn-success" onclick="generateShareLink()">Generate Link</button>
+            </div>
+            
+            <div id="shareResultSection" class="hidden" style="margin: 20px 0;">
+                <label style="display: block; margin-bottom: 5px; font-size: 13px; font-weight: 600;">Share Link:</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="shareLink" readonly style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; background: #f8f9fa;">
+                    <button class="btn btn-success btn-small" onclick="copyShareLink()">Copy</button>
+                </div>
+                <p style="font-size: 11px; color: #666; margin-top: 5px;">Anyone with this link can view the resume. Link contains all resume data.</p>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn" onclick="closeShareModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Schema Version and Migration System
+        // Current Schema: v3
+        // v1: Original schema with hardcoded contact fields and fixed sections
+        // v2: Dynamic contact info, dynamic sections (skills/knowledge types)
+        // v3: Experiences converted to work-history section type with date objects
+        const CURRENT_SCHEMA_VERSION = 3;
+
+        // Initial data
+        const initialExperiences = [];
+
+        let contactInfo = []; // v2: Dynamic contact items
+        let sections = []; // v2: Dynamic sections (replaces industry-knowledge and tools-tech)
+        let currentFileName = null;
+        let currentFileHandle = null;
+        let isModified = false;
+        let lastSavedData = null;
+        let currentVersionId = null;
+        let versionHistory = [];
+        const MAX_VERSIONS = 50;
+        let versionCommitTimer = null;
+        const VERSION_COMMIT_DELAY = 3000; // 3 seconds after last edit
+
+        // Contact Info Type Definitions with icons
+        const CONTACT_TYPES = {
+            phone: { label: 'Phone', icon: '📱' },
+            email: { label: 'Email', icon: '✉️' },
+            location: { label: 'Location', icon: '📍' },
+            linkedin: { label: 'LinkedIn', icon: '🔗' },
+            github: { label: 'GitHub', icon: '💻' },
+            website: { label: 'Website', icon: '🌐' },
+            twitter: { label: 'Twitter', icon: '🐦' },
+            education: { label: 'Education', icon: '🎓' },
+            custom: { label: 'Custom', icon: '📄' }
+        };
+
+        // Dynamic Section Type Definitions
+        const SECTION_TYPES = {
+            'subject-areas': { label: 'Subject Areas', description: 'Labeled subsections' },
+            'word-cloud': { label: 'Word Cloud', description: 'Bullet-point list' },
+            'work-history': { label: 'Work History', description: 'Job experiences with dates' },
+            'project-list': { label: 'Project List', description: 'Notable projects with details' }
+        };
+
+        // Schema Migration Functions
+        function migrateResumeData(data) {
+            const version = data.schemaVersion || 1;
+            
+            if (version === CURRENT_SCHEMA_VERSION) {
+                return data; // Already current
+            }
+            
+            console.log(`Migrating resume data from v${version} to v${CURRENT_SCHEMA_VERSION}`);
+            
+            let migrated = { ...data };
+            
+            // Migrate v1 to v2
+            if (version < 2) {
+                migrated = migrateV1ToV2(migrated);
+            }
+            
+            // Migrate v2 to v3
+            if (version < 3) {
+                migrated = migrateV2ToV3(migrated);
+            }
+            
+            migrated.schemaVersion = CURRENT_SCHEMA_VERSION;
+            return migrated;
+        }
+
+        function migrateV1ToV2(data) {
+            // Convert hardcoded contact fields to dynamic contactInfo array
+            const contactInfo = [];
+            if (data.phone) contactInfo.push({ type: 'phone', value: data.phone, label: '' });
+            if (data.email) contactInfo.push({ type: 'email', value: data.email, label: '' });
+            if (data.location) contactInfo.push({ type: 'location', value: data.location, label: '' });
+            if (data.linkedin) contactInfo.push({ type: 'linkedin', value: data.linkedin, label: '' });
+            if (data.github) contactInfo.push({ type: 'github', value: data.github, label: '' });
+            if (data.education) contactInfo.push({ type: 'education', value: data.education, label: '' });
+            
+            // Convert fixed sections to dynamic sections
+            const sections = [];
+            
+            // Industry Knowledge -> word-cloud type
+            if (data.industryKnowledge) {
+                sections.push({
+                    id: 'ik_' + Date.now(),
+                    title: 'Industry Knowledge',
+                    type: 'word-cloud',
+                    content: data.industryKnowledge
+                });
+            }
+            
+            // Tools & Tech subsections -> single skills type section with subsections
+            const techFields = [
+                { key: 'languages', title: 'Languages' },
+                { key: 'frameworks', title: 'Frameworks' },
+                { key: 'editors', title: 'Editors & IDE' },
+                { key: 'sourceControl', title: 'Source Control & SDLC' },
+                { key: 'protocols', title: 'Protocols & Formats' },
+                { key: 'systems', title: 'Systems' },
+                { key: 'miscSoftware', title: 'Misc Software' },
+                { key: 'providers', title: 'Providers' }
+            ];
+            
+            const techSubsections = [];
+            techFields.forEach(field => {
+                if (data[field.key]) {
+                    techSubsections.push({
+                        label: field.title,
+                        value: data[field.key]
+                    });
+                }
+            });
+            
+            if (techSubsections.length > 0) {
+                sections.push({
+                    id: 'tech_' + Date.now(),
+                    title: 'Tools & Tech',
+                    type: 'subject-areas',
+                    content: techSubsections
+                });
+            }
+            
+            return {
+                schemaVersion: 2,
+                name: data.name || '',
+                tagline: data.tagline || '',
+                summary: data.summary || '',
+                contactInfo: contactInfo,
+                sections: sections,
+                experiences: data.experiences || []
+            };
+        }
+
+        function parseDateString(dateStr) {
+            // Parse free-form date strings and convert to ISO8601 (YYYY-MM-DD)
+            if (!dateStr || typeof dateStr !== 'string') return '';
+            
+            const normalized = dateStr.trim().toLowerCase();
+            
+            // Check for "present", "current", etc.
+            if (normalized.includes('present') || normalized.includes('current') || normalized.includes('ongoing')) {
+                return ''; // Empty string means no end date
+            }
+            
+            // Month names mapping
+            const monthMap = {
+                'january': '01', 'jan': '01',
+                'february': '02', 'feb': '02',
+                'march': '03', 'mar': '03',
+                'april': '04', 'apr': '04',
+                'may': '05',
+                'june': '06', 'jun': '06',
+                'july': '07', 'jul': '07',
+                'august': '08', 'aug': '08',
+                'september': '09', 'sep': '09', 'sept': '09',
+                'october': '10', 'oct': '10',
+                'november': '11', 'nov': '11',
+                'december': '12', 'dec': '12'
+            };
+            
+            // Try to match "Month YYYY" or "Month, YYYY"
+            for (const [monthName, monthNum] of Object.entries(monthMap)) {
+                const regex = new RegExp(monthName + '[,\\s]+' + '(\\d{4})', 'i');
+                const match = dateStr.match(regex);
+                if (match) {
+                    return `${match[1]}-${monthNum}-01`;
+                }
+            }
+            
+            // Try to match "YYYY-MM" format (already good, just add day)
+            const isoMonthMatch = dateStr.match(/^(\d{4})-(\d{2})$/);
+            if (isoMonthMatch) {
+                return `${isoMonthMatch[1]}-${isoMonthMatch[2]}-01`;
+            }
+            
+            // Try to match just year "YYYY"
+            const yearMatch = dateStr.match(/\b(\d{4})\b/);
+            if (yearMatch) {
+                return `${yearMatch[1]}-01-01`;
+            }
+            
+            // If already ISO8601 format, return as-is
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                return dateStr;
+            }
+            
+            // Default: return empty string if we can't parse
+            return '';
+        }
+
+        function migrateV2ToV3(data) {
+            // Convert experiences array to work-history section
+            const sections = data.sections || [];
+            
+            if (data.experiences && data.experiences.length > 0) {
+                // Convert old free-form date strings to ISO8601
+                const jobs = data.experiences.map(exp => ({
+                    title: exp.title || '',
+                    company: exp.company || '',
+                    startDate: parseDateString(exp.startDate),
+                    endDate: parseDateString(exp.endDate),
+                    description: exp.description || ''
+                }));
+                
+                // Add work history section
+                sections.push({
+                    id: 'wh_' + Date.now(),
+                    title: 'Experience',
+                    type: 'work-history',
+                    content: jobs
+                });
+            }
+            
+            return {
+                schemaVersion: 3,
+                name: data.name || '',
+                tagline: data.tagline || '',
+                summary: data.summary || '',
+                contactInfo: data.contactInfo || [],
+                sections: sections
+            };
+        }
+
+        function createNewResume() {
+            document.getElementById('welcomeDialog').classList.add('hidden');
+            document.getElementById('mainContainer').classList.remove('hidden');
+            currentFileName = 'New Resume';
+            currentVersionId = Date.now();
+            isModified = false;
+            
+            // Clear the closed flag when opening a resume
+            localStorage.removeItem('resumeEditor_closedByUser');
+            
+            // Populate with sample data (v2 schema)
+            document.getElementById('name').value = 'John Doe';
+            document.getElementById('tagline').value = 'Full-Stack Developer & Cloud Enthusiast';
+            document.getElementById('summary').value = 'Experienced software engineer with expertise in full-stack development and cloud technologies. Proven track record of delivering scalable solutions and leading technical initiatives.';
+            
+            // Sample contact info
+            contactInfo = [
+                { type: 'phone', value: '(555) 123-4567', label: '' },
+                { type: 'email', value: 'john.doe@example.com', label: '' },
+                { type: 'location', value: 'San Francisco, CA', label: '' },
+                { type: 'linkedin', value: 'linkedin.com/in/johndoe', label: '' },
+                { type: 'github', value: 'github.com/johndoe', label: '' },
+                { type: 'education', value: 'BS Computer Science, State University', label: '' }
+            ];
+            
+            // Sample dynamic sections (v3 schema)
+            sections = [
+                {
+                    id: 'ik_' + Date.now(),
+                    title: 'Industry Knowledge',
+                    type: 'word-cloud',
+                    content: 'Software Architecture\nAgile Development\nCloud Computing\nDevOps Practices\nDatabase Design\nAPI Design'
+                },
+                {
+                    id: 'tech_' + Date.now(),
+                    title: 'Tools & Tech',
+                    type: 'subject-areas',
+                    content: [
+                        { label: 'Languages', value: 'JavaScript, Python, Java, TypeScript, SQL' },
+                        { label: 'Frameworks', value: 'React, Node.js, Django, Spring Boot' },
+                        { label: 'Systems & Cloud', value: 'Linux, Docker, Kubernetes, AWS, Azure, Google Cloud' }
+                    ]
+                },
+                {
+                    id: 'wh_' + Date.now(),
+                    title: 'Experience',
+                    type: 'work-history',
+                    showTotalYears: true,
+                    content: [
+                        {
+                            title: "Senior Software Engineer",
+                            company: "Tech Corp",
+                            startDate: "2020-01-15",
+                            endDate: "",
+                            description: "Led development of microservices architecture serving 1M+ users. Mentored junior developers and established best practices for code quality and testing."
+                        },
+                        {
+                            title: "Software Engineer",
+                            company: "StartUp Inc",
+                            startDate: "2017-06-01",
+                            endDate: "2019-12-31",
+                            description: "Built full-stack web applications using React and Node.js. Implemented CI/CD pipelines and improved deployment efficiency by 50%."
+                        }
+                    ]
+                },
+                {
+                    id: 'proj_' + Date.now(),
+                    title: 'Notable Projects',
+                    type: 'project-list',
+                    content: [
+                        {
+                            title: "Resume Builder Pro",
+                            startedDate: "2024-03-01",
+                            status: "Active",
+                            tags: "web app, open source, productivity",
+                            url: "https://github.com/johndoe/resume-builder",
+                            description: "Open-source resume editor with real-time preview and PDF export. Built with vanilla JavaScript and supports multiple schema versions with automatic migration."
+                        },
+                        {
+                            title: "IoT Weather Station",
+                            startedDate: "2023-06-15",
+                            status: "Completed",
+                            tags: "hardware, IoT, woodworking",
+                            url: "",
+                            description: "Custom weather station using Raspberry Pi and hand-crafted wooden enclosure. Collects temperature, humidity, and pressure data with cloud sync capabilities."
+                        }
+                    ]
+                }
+            ];
+            
+            updateStatus();
+            renderContactInfo();
+            renderSections();
+            updatePreview();
+            saveToLocalStorage();
+            updateVersionStatus();
+        }
+
+        // Contact Info CRUD Functions
+        function addContactInfo() {
+            contactInfo.unshift({
+                type: 'phone',
+                value: '',
+                label: ''
+            });
+            renderContactInfo();
+            updatePreview();
+            markModified();
+        }
+
+        function removeContactInfo(index) {
+            if (confirm('Remove this contact item?')) {
+                contactInfo.splice(index, 1);
+                renderContactInfo();
+                updatePreview();
+                markModified();
+            }
+        }
+
+        function updateContactInfo(index, field, value) {
+            contactInfo[index][field] = value;
+            updatePreview();
+            markModified();
+        }
+
+        function moveContactInfo(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= contactInfo.length) return;
+            [contactInfo[index], contactInfo[newIndex]] = [contactInfo[newIndex], contactInfo[index]];
+            renderContactInfo();
+            updatePreview();
+            markModified();
+        }
+
+        function renderContactInfo() {
+            const container = document.getElementById('contactItems');
+            
+            // Preserve expanded state before re-rendering
+            const expandedStates = {};
+            contactInfo.forEach((_, index) => {
+                const content = document.getElementById(`contact-content-${index}`);
+                if (content && content.classList.contains('expanded')) {
+                    expandedStates[index] = true;
+                }
+            });
+            
+            container.innerHTML = '';
+            
+            contactInfo.forEach((contact, index) => {
+                const item = document.createElement('div');
+                item.className = 'experience-item';
+                item.style.borderLeftColor = '#4472c4';
+                
+                const header = document.createElement('div');
+                header.className = 'experience-header';
+                header.onclick = () => toggleContactInfo(index);
+                
+                const heading = document.createElement('h3');
+                const icon = document.createElement('span');
+                icon.className = 'collapse-icon';
+                icon.textContent = '▶';
+                heading.appendChild(icon);
+                const typeLabel = CONTACT_TYPES[contact.type]?.label || 'Custom';
+                const displayValue = contact.value || '(empty)';
+                heading.appendChild(document.createTextNode(`${typeLabel}: ${displayValue}`));
+                
+                const controls = document.createElement('div');
+                controls.className = 'experience-controls';
+                
+                // Move buttons
+                const upBtn = document.createElement('button');
+                upBtn.className = 'btn-icon';
+                upBtn.textContent = '↑';
+                upBtn.disabled = index === 0;
+                upBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    moveContactInfo(index, -1);
+                };
+                
+                const downBtn = document.createElement('button');
+                downBtn.className = 'btn-icon';
+                downBtn.textContent = '↓';
+                downBtn.disabled = index === contactInfo.length - 1;
+                downBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    moveContactInfo(index, 1);
+                };
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'btn-icon btn-danger';
+                removeBtn.textContent = '×';
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removeContactInfo(index);
+                };
+                
+                controls.appendChild(upBtn);
+                controls.appendChild(downBtn);
+                controls.appendChild(removeBtn);
+                
+                header.appendChild(heading);
+                header.appendChild(controls);
+                
+                const content = document.createElement('div');
+                content.className = 'experience-content';
+                content.id = `contact-content-${index}`;
+                
+                // Type selector
+                const typeLabelElem = document.createElement('label');
+                typeLabelElem.textContent = 'Type';
+                const typeSelect = document.createElement('select');
+                Object.keys(CONTACT_TYPES).forEach(typeKey => {
+                    const option = document.createElement('option');
+                    option.value = typeKey;
+                    option.textContent = CONTACT_TYPES[typeKey].label;
+                    if (typeKey === contact.type) option.selected = true;
+                    typeSelect.appendChild(option);
+                });
+                typeSelect.onchange = (e) => {
+                    updateContactInfo(index, 'type', e.target.value);
+                    renderContactInfo(); // Re-render to update header
+                };
+                
+                // Value input
+                const valueLabel = document.createElement('label');
+                valueLabel.textContent = 'Value';
+                const valueInput = document.createElement('input');
+                valueInput.type = 'text';
+                valueInput.value = contact.value;
+                valueInput.oninput = (e) => {
+                    updateContactInfo(index, 'value', e.target.value);
+                    // Update header text without full re-render
+                    const headerText = heading.childNodes[1];
+                    if (headerText) {
+                        const typeLabel = CONTACT_TYPES[contact.type]?.label || 'Custom';
+                        const displayValue = e.target.value || '(empty)';
+                        headerText.textContent = `${typeLabel}: ${displayValue}`;
+                    }
+                };
+                
+                content.appendChild(typeLabelElem);
+                content.appendChild(typeSelect);
+                content.appendChild(valueLabel);
+                content.appendChild(valueInput);
+                
+                item.appendChild(header);
+                item.appendChild(content);
+                container.appendChild(item);
+                
+                // Restore expanded state
+                if (expandedStates[index]) {
+                    content.classList.add('expanded');
+                    const icon = header.querySelector('.collapse-icon');
+                    if (icon) icon.classList.add('expanded');
+                }
+            });
+        }
+
+        function toggleContactInfo(index) {
+            const content = document.getElementById(`contact-content-${index}`);
+            const icon = content.previousElementSibling.querySelector('.collapse-icon');
+            if (content && icon) {
+                content.classList.toggle('expanded');
+                icon.classList.toggle('expanded');
+            }
+        }
+
+        // Dynamic Sections CRUD Functions
+        function addDynamicSection() {
+            sections.unshift({
+                id: 'section_' + Date.now(),
+                title: 'New Section',
+                type: 'word-cloud',
+                content: ''
+            });
+            renderSections();
+            updatePreview();
+            markModified();
+        }
+
+        function removeDynamicSection(index) {
+            if (confirm('Remove this section?')) {
+                sections.splice(index, 1);
+                renderSections();
+                updatePreview();
+                markModified();
+            }
+        }
+
+        function updateDynamicSection(index, field, value) {
+            sections[index][field] = value;
+            if (field === 'type') {
+                // Re-render if type changed
+                renderSections();
+            } else if (field === 'title') {
+                // Update header text without re-rendering everything
+                const header = document.querySelector(`#section-content-${index}`).previousElementSibling.querySelector('h3');
+                if (header) {
+                    const icon = header.querySelector('.collapse-icon');
+                    const section = sections[index];
+                    header.textContent = section.title + ' (' + SECTION_TYPES[section.type].label + ')';
+                    // Re-add the icon that was cleared by textContent
+                    header.insertBefore(icon, header.firstChild);
+                }
+            }
+            updatePreview();
+            markModified();
+        }
+
+        function moveDynamicSection(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= sections.length) return;
+            [sections[index], sections[newIndex]] = [sections[newIndex], sections[index]];
+            renderSections();
+            updatePreview();
+            markModified();
+        }
+
+        function renderSections() {
+            const container = document.getElementById('dynamicSections');
+            
+            // Preserve expanded state before re-rendering
+            const expandedStates = {};
+            sections.forEach((section, idx) => {
+                const content = document.getElementById(`section-content-${idx}`);
+                if (content && content.classList.contains('expanded')) {
+                    expandedStates[idx] = true;
+                }
+            });
+            
+            container.innerHTML = '';
+            
+            sections.forEach((section, index) => {
+                const item = document.createElement('div');
+                item.className = 'experience-item';
+                item.style.borderLeftColor = '#70AD47';
+                
+                const header = document.createElement('div');
+                header.className = 'experience-header';
+                header.onclick = () => toggleDynamicSection(index);
+                
+                const heading = document.createElement('h3');
+                const icon = document.createElement('span');
+                icon.className = 'collapse-icon';
+                icon.textContent = '▶';
+                heading.appendChild(icon);
+                heading.appendChild(document.createTextNode(section.title + ' (' + SECTION_TYPES[section.type].label + ')'));
+                
+                const controls = document.createElement('div');
+                controls.className = 'experience-controls';
+                
+                const upBtn = document.createElement('button');
+                upBtn.className = 'btn-icon';
+                upBtn.textContent = '↑';
+                upBtn.disabled = index === 0;
+                upBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    moveDynamicSection(index, -1);
+                };
+                
+                const downBtn = document.createElement('button');
+                downBtn.className = 'btn-icon';
+                downBtn.textContent = '↓';
+                downBtn.disabled = index === sections.length - 1;
+                downBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    moveDynamicSection(index, 1);
+                };
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'btn-icon btn-danger';
+                removeBtn.textContent = '×';
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removeDynamicSection(index);
+                };
+                
+                controls.appendChild(upBtn);
+                controls.appendChild(downBtn);
+                controls.appendChild(removeBtn);
+                
+                header.appendChild(heading);
+                header.appendChild(controls);
+                
+                const content = document.createElement('div');
+                content.className = 'experience-content';
+                content.id = `section-content-${index}`;
+                
+                const titleLabel = document.createElement('label');
+                titleLabel.textContent = 'Section Title';
+                const titleInput = document.createElement('input');
+                titleInput.type = 'text';
+                titleInput.value = section.title;
+                titleInput.oninput = (e) => updateDynamicSection(index, 'title', e.target.value);
+                
+                const typeLabel = document.createElement('label');
+                typeLabel.textContent = 'Section Type';
+                const typeSelect = document.createElement('select');
+                Object.keys(SECTION_TYPES).forEach(typeKey => {
+                    const option = document.createElement('option');
+                    option.value = typeKey;
+                    option.textContent = SECTION_TYPES[typeKey].label + ' - ' + SECTION_TYPES[typeKey].description;
+                    if (typeKey === section.type) option.selected = true;
+                    typeSelect.appendChild(option);
+                });
+                typeSelect.onchange = (e) => {
+                    const newType = e.target.value;
+                    if (newType === 'subject-areas' && typeof section.content === 'string') {
+                        // Convert string to subsections array
+                        section.content = [{ label: 'Items', value: section.content }];
+                    } else if (newType === 'word-cloud' && Array.isArray(section.content)) {
+                        // Convert subsections to string
+                        section.content = section.content.map(s => s.value).join(', ');
+                    }
+                    updateDynamicSection(index, 'type', newType);
+                };
+                
+                content.appendChild(titleLabel);
+                content.appendChild(titleInput);
+                content.appendChild(typeLabel);
+                content.appendChild(typeSelect);
+                
+                // Render content based on type
+                if (section.type === 'subject-areas') {
+                    // Subject Areas type with subsections
+                    const subsectionsLabel = document.createElement('label');
+                    subsectionsLabel.textContent = 'Subsections';
+                    subsectionsLabel.style.marginTop = '15px';
+                    content.appendChild(subsectionsLabel);
+                    
+                    const addSubBtn = document.createElement('button');
+                    addSubBtn.className = 'btn-icon btn-success';
+                    addSubBtn.textContent = '+ Add Subsection';
+                    addSubBtn.style.marginBottom = '10px';
+                    addSubBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        if (!Array.isArray(section.content)) {
+                            section.content = [];
+                        }
+                        section.content.unshift({ label: 'New Area', value: '' });
+                        renderSections();
+                        updatePreview();
+                        markModified();
+                    };
+                    content.appendChild(addSubBtn);
+                    
+                    const subsections = Array.isArray(section.content) ? section.content : [];
+                    subsections.forEach((subsection, subIdx) => {
+                        const subItem = document.createElement('div');
+                        subItem.style.background = '#fff';
+                        subItem.style.padding = '10px';
+                        subItem.style.margin = '5px 0';
+                        subItem.style.border = '1px solid #ddd';
+                        subItem.style.borderRadius = '4px';
+                        
+                        const subControls = document.createElement('div');
+                        subControls.style.display = 'flex';
+                        subControls.style.gap = '5px';
+                        subControls.style.marginBottom = '8px';
+                        subControls.style.justifyContent = 'flex-end';
+                        
+                        const upSubBtn = document.createElement('button');
+                        upSubBtn.className = 'btn-icon';
+                        upSubBtn.textContent = '↑';
+                        upSubBtn.disabled = subIdx === 0;
+                        upSubBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            if (subIdx > 0) {
+                                [subsections[subIdx], subsections[subIdx-1]] = [subsections[subIdx-1], subsections[subIdx]];
+                                renderSections();
+                                updatePreview();
+                                markModified();
+                            }
+                        };
+                        
+                        const downSubBtn = document.createElement('button');
+                        downSubBtn.className = 'btn-icon';
+                        downSubBtn.textContent = '↓';
+                        downSubBtn.disabled = subIdx === subsections.length - 1;
+                        downSubBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            if (subIdx < subsections.length - 1) {
+                                [subsections[subIdx], subsections[subIdx+1]] = [subsections[subIdx+1], subsections[subIdx]];
+                                renderSections();
+                                updatePreview();
+                                markModified();
+                            }
+                        };
+                        
+                        const removeSubBtn = document.createElement('button');
+                        removeSubBtn.className = 'btn-icon btn-danger';
+                        removeSubBtn.textContent = '×';
+                        removeSubBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            subsections.splice(subIdx, 1);
+                            renderSections();
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        subControls.appendChild(upSubBtn);
+                        subControls.appendChild(downSubBtn);
+                        subControls.appendChild(removeSubBtn);
+                        
+                        const labelLabel = document.createElement('label');
+                        labelLabel.textContent = 'Label';
+                        labelLabel.style.fontSize = '12px';
+                        const labelInput = document.createElement('input');
+                        labelInput.type = 'text';
+                        labelInput.value = subsection.label || '';
+                        labelInput.style.marginBottom = '5px';
+                        labelInput.oninput = (e) => {
+                            subsection.label = e.target.value;
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        const valueLabel = document.createElement('label');
+                        valueLabel.textContent = 'Items (comma-separated)';
+                        valueLabel.style.fontSize = '12px';
+                        const valueInput = document.createElement('input');
+                        valueInput.type = 'text';
+                        valueInput.value = subsection.value || '';
+                        valueInput.oninput = (e) => {
+                            subsection.value = e.target.value;
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        subItem.appendChild(subControls);
+                        subItem.appendChild(labelLabel);
+                        subItem.appendChild(labelInput);
+                        subItem.appendChild(valueLabel);
+                        subItem.appendChild(valueInput);
+                        content.appendChild(subItem);
+                    });
+                } else if (section.type === 'work-history') {
+                    // Work History type with job entries
+                    
+                    // Show total years in preview checkbox
+                    const showYearsCheckContainer = document.createElement('div');
+                    showYearsCheckContainer.style.marginTop = '10px';
+                    showYearsCheckContainer.style.marginBottom = '10px';
+                    showYearsCheckContainer.style.display = 'flex';
+                    showYearsCheckContainer.style.alignItems = 'center';
+                    showYearsCheckContainer.style.gap = '5px';
+                    
+                    const showYearsCheck = document.createElement('input');
+                    showYearsCheck.type = 'checkbox';
+                    showYearsCheck.id = `showYears-${index}`;
+                    showYearsCheck.checked = section.showTotalYears !== false; // Default to true
+                    showYearsCheck.style.margin = '0';
+                    
+                    const showYearsLabel = document.createElement('label');
+                    showYearsLabel.htmlFor = `showYears-${index}`;
+                    showYearsLabel.textContent = 'Show total years in preview';
+                    showYearsLabel.style.fontSize = '12px';
+                    showYearsLabel.style.cursor = 'pointer';
+                    showYearsLabel.style.margin = '0';
+                    
+                    showYearsCheck.onchange = (e) => {
+                        section.showTotalYears = e.target.checked;
+                        updatePreview();
+                        markModified();
+                    };
+                    
+                    showYearsCheckContainer.appendChild(showYearsCheck);
+                    showYearsCheckContainer.appendChild(showYearsLabel);
+                    content.appendChild(showYearsCheckContainer);
+                    
+                    const jobsLabel = document.createElement('label');
+                    jobsLabel.textContent = 'Job Positions';
+                    jobsLabel.style.marginTop = '15px';
+                    content.appendChild(jobsLabel);
+                    
+                    // Calculate total years of experience
+                    const totalYears = calculateTotalYears(section.content || []);
+                    if (totalYears > 0) {
+                        const yearsInfo = document.createElement('div');
+                        yearsInfo.style.fontSize = '12px';
+                        yearsInfo.style.color = '#666';
+                        yearsInfo.style.marginBottom = '10px';
+                        yearsInfo.textContent = `Total: ${totalYears.toFixed(1)} years of experience`;
+                        content.appendChild(yearsInfo);
+                    }
+                    
+                    const addJobBtn = document.createElement('button');
+                    addJobBtn.className = 'btn-icon btn-success';
+                    addJobBtn.textContent = '+ Add Position';
+                    addJobBtn.style.marginBottom = '10px';
+                    addJobBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        if (!Array.isArray(section.content)) {
+                            section.content = [];
+                        }
+                        section.content.unshift({
+                            title: '',
+                            company: '',
+                            startDate: '',
+                            endDate: '',
+                            description: ''
+                        });
+                        renderSections();
+                        updatePreview();
+                        markModified();
+                    };
+                    content.appendChild(addJobBtn);
+                    
+                    const jobs = Array.isArray(section.content) ? section.content : [];
+                    jobs.forEach((job, jobIdx) => {
+                        const jobItem = document.createElement('div');
+                        jobItem.style.background = '#fff';
+                        jobItem.style.padding = '10px';
+                        jobItem.style.margin = '5px 0';
+                        jobItem.style.border = '1px solid #ddd';
+                        jobItem.style.borderRadius = '4px';
+                        
+                        const jobControls = document.createElement('div');
+                        jobControls.style.display = 'flex';
+                        jobControls.style.gap = '5px';
+                        jobControls.style.marginBottom = '8px';
+                        jobControls.style.justifyContent = 'flex-end';
+                        
+                        const upJobBtn = document.createElement('button');
+                        upJobBtn.className = 'btn-icon';
+                        upJobBtn.textContent = '\u2191';
+                        upJobBtn.disabled = jobIdx === 0;
+                        upJobBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            if (jobIdx > 0) {
+                                [jobs[jobIdx], jobs[jobIdx-1]] = [jobs[jobIdx-1], jobs[jobIdx]];
+                                renderSections();
+                                updatePreview();
+                                markModified();
+                            }
+                        };
+                        
+                        const downJobBtn = document.createElement('button');
+                        downJobBtn.className = 'btn-icon';
+                        downJobBtn.textContent = '\u2193';
+                        downJobBtn.disabled = jobIdx === jobs.length - 1;
+                        downJobBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            if (jobIdx < jobs.length - 1) {
+                                [jobs[jobIdx], jobs[jobIdx+1]] = [jobs[jobIdx+1], jobs[jobIdx]];
+                                renderSections();
+                                updatePreview();
+                                markModified();
+                            }
+                        };
+                        
+                        const removeJobBtn = document.createElement('button');
+                        removeJobBtn.className = 'btn-icon btn-danger';
+                        removeJobBtn.textContent = '\u00d7';
+                        removeJobBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            jobs.splice(jobIdx, 1);
+                            renderSections();
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        jobControls.appendChild(upJobBtn);
+                        jobControls.appendChild(downJobBtn);
+                        jobControls.appendChild(removeJobBtn);
+                        
+                        const titleLabel = document.createElement('label');
+                        titleLabel.textContent = 'Job Title';
+                        titleLabel.style.fontSize = '12px';
+                        const titleInput = document.createElement('input');
+                        titleInput.type = 'text';
+                        titleInput.value = job.title || '';
+                        titleInput.oninput = (e) => {
+                            job.title = e.target.value;
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        const companyLabel = document.createElement('label');
+                        companyLabel.textContent = 'Company';
+                        companyLabel.style.fontSize = '12px';
+                        const companyInput = document.createElement('input');
+                        companyInput.type = 'text';
+                        companyInput.value = job.company || '';
+                        companyInput.oninput = (e) => {
+                            job.company = e.target.value;
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        const datesRow = document.createElement('div');
+                        datesRow.style.display = 'grid';
+                        datesRow.style.gridTemplateColumns = '1fr 1fr';
+                        datesRow.style.gap = '10px';
+                        
+                        const startDateDiv = document.createElement('div');
+                        const startDateLabel = document.createElement('label');
+                        startDateLabel.textContent = 'Start Date';
+                        startDateLabel.style.fontSize = '12px';
+                        const startDateInput = document.createElement('input');
+                        startDateInput.type = 'date';
+                        startDateInput.value = job.startDate || '';
+                        startDateInput.onchange = (e) => {
+                            job.startDate = e.target.value;
+                            renderSections(); // Re-render to update total years
+                            updatePreview();
+                            markModified();
+                        };
+                        startDateInput.oninput = (e) => {
+                            job.startDate = e.target.value;
+                            updatePreview();
+                            markModified();
+                        };
+                        startDateDiv.appendChild(startDateLabel);
+                        startDateDiv.appendChild(startDateInput);
+                        
+                        const endDateDiv = document.createElement('div');
+                        const endDateLabel = document.createElement('label');
+                        endDateLabel.textContent = 'End Date';
+                        endDateLabel.style.fontSize = '12px';
+                        
+                        const endDateInput = document.createElement('input');
+                        endDateInput.type = 'date';
+                        endDateInput.value = job.endDate || '';
+                        endDateInput.disabled = (job.endDate === '' || job.endDate === null || job.endDate === undefined);
+                        
+                        const endDateCheckContainer = document.createElement('div');
+                        endDateCheckContainer.style.display = 'flex';
+                        endDateCheckContainer.style.alignItems = 'center';
+                        endDateCheckContainer.style.gap = '5px';
+                        endDateCheckContainer.style.marginTop = '5px';
+                        
+                        const noEndDateCheck = document.createElement('input');
+                        noEndDateCheck.type = 'checkbox';
+                        noEndDateCheck.id = `noEndDate-${index}-${jobIdx}`;
+                        noEndDateCheck.checked = (job.endDate === '' || job.endDate === null || job.endDate === undefined);
+                        noEndDateCheck.style.margin = '0';
+                        noEndDateCheck.style.verticalAlign = 'middle';
+                        
+                        const noEndDateLabel = document.createElement('label');
+                        noEndDateLabel.htmlFor = `noEndDate-${index}-${jobIdx}`;
+                        noEndDateLabel.textContent = 'Currently working here';
+                        noEndDateLabel.style.fontSize = '11px';
+                        noEndDateLabel.style.cursor = 'pointer';
+                        noEndDateLabel.style.userSelect = 'none';
+                        noEndDateLabel.style.margin = '0';
+                        noEndDateLabel.style.lineHeight = '1';
+                        
+                        endDateCheckContainer.appendChild(noEndDateCheck);
+                        endDateCheckContainer.appendChild(noEndDateLabel);
+                        
+                        noEndDateCheck.onchange = (e) => {
+                            if (e.target.checked) {
+                                job.endDate = '';
+                                endDateInput.value = '';
+                                endDateInput.disabled = true;
+                            } else {
+                                job.endDate = '';
+                                endDateInput.disabled = false;
+                                endDateInput.focus();
+                            }
+                            renderSections(); // Re-render to update total years
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        endDateInput.onchange = (e) => {
+                            job.endDate = e.target.value;
+                            renderSections(); // Re-render to update total years
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        endDateInput.oninput = (e) => {
+                            job.endDate = e.target.value;
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        endDateDiv.appendChild(endDateLabel);
+                        endDateDiv.appendChild(endDateInput);
+                        endDateDiv.appendChild(endDateCheckContainer);
+                        
+                        datesRow.appendChild(startDateDiv);
+                        datesRow.appendChild(endDateDiv);
+                        
+                        const descLabel = document.createElement('label');
+                        descLabel.textContent = 'Description';
+                        descLabel.style.fontSize = '12px';
+                        const descTextarea = document.createElement('textarea');
+                        descTextarea.value = job.description || '';
+                        descTextarea.rows = 3;
+                        descTextarea.oninput = (e) => {
+                            job.description = e.target.value;
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        jobItem.appendChild(jobControls);
+                        jobItem.appendChild(titleLabel);
+                        jobItem.appendChild(titleInput);
+                        jobItem.appendChild(companyLabel);
+                        jobItem.appendChild(companyInput);
+                        jobItem.appendChild(datesRow);
+                        jobItem.appendChild(descLabel);
+                        jobItem.appendChild(descTextarea);
+                        content.appendChild(jobItem);
+                    });
+                } else if (section.type === 'project-list') {
+                    // Project List type with project entries
+                    const projectsLabel = document.createElement('label');
+                    projectsLabel.textContent = 'Projects';
+                    projectsLabel.style.marginTop = '15px';
+                    content.appendChild(projectsLabel);
+                    
+                    const addProjectBtn = document.createElement('button');
+                    addProjectBtn.className = 'btn-icon btn-success';
+                    addProjectBtn.textContent = '+ Add Project';
+                    addProjectBtn.style.marginBottom = '10px';
+                    addProjectBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        if (!Array.isArray(section.content)) {
+                            section.content = [];
+                        }
+                        section.content.unshift({
+                            title: '',
+                            startedDate: '',
+                            status: 'Active',
+                            tags: '',
+                            url: '',
+                            description: ''
+                        });
+                        renderSections();
+                        updatePreview();
+                        markModified();
+                    };
+                    content.appendChild(addProjectBtn);
+                    
+                    const projects = Array.isArray(section.content) ? section.content : [];
+                    projects.forEach((project, projIdx) => {
+                        const projectItem = document.createElement('div');
+                        projectItem.style.background = '#fff';
+                        projectItem.style.padding = '10px';
+                        projectItem.style.margin = '5px 0';
+                        projectItem.style.border = '1px solid #ddd';
+                        projectItem.style.borderRadius = '4px';
+                        
+                        const projectControls = document.createElement('div');
+                        projectControls.style.display = 'flex';
+                        projectControls.style.gap = '5px';
+                        projectControls.style.marginBottom = '8px';
+                        projectControls.style.justifyContent = 'flex-end';
+                        
+                        const upProjBtn = document.createElement('button');
+                        upProjBtn.className = 'btn-icon';
+                        upProjBtn.textContent = '\u2191';
+                        upProjBtn.disabled = projIdx === 0;
+                        upProjBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            if (projIdx > 0) {
+                                [projects[projIdx], projects[projIdx-1]] = [projects[projIdx-1], projects[projIdx]];
+                                renderSections();
+                                updatePreview();
+                                markModified();
+                            }
+                        };
+                        
+                        const downProjBtn = document.createElement('button');
+                        downProjBtn.className = 'btn-icon';
+                        downProjBtn.textContent = '\u2193';
+                        downProjBtn.disabled = projIdx === projects.length - 1;
+                        downProjBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            if (projIdx < projects.length - 1) {
+                                [projects[projIdx], projects[projIdx+1]] = [projects[projIdx+1], projects[projIdx]];
+                                renderSections();
+                                updatePreview();
+                                markModified();
+                            }
+                        };
+                        
+                        const removeProjBtn = document.createElement('button');
+                        removeProjBtn.className = 'btn-icon btn-danger';
+                        removeProjBtn.textContent = '\u00d7';
+                        removeProjBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            projects.splice(projIdx, 1);
+                            renderSections();
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        projectControls.appendChild(upProjBtn);
+                        projectControls.appendChild(downProjBtn);
+                        projectControls.appendChild(removeProjBtn);
+                        
+                        const titleLabel = document.createElement('label');
+                        titleLabel.textContent = 'Project Name';
+                        titleLabel.style.fontSize = '12px';
+                        const titleInput = document.createElement('input');
+                        titleInput.type = 'text';
+                        titleInput.value = project.title || '';
+                        titleInput.oninput = (e) => {
+                            project.title = e.target.value;
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        const urlLabel = document.createElement('label');
+                        urlLabel.textContent = 'URL (optional)';
+                        urlLabel.style.fontSize = '12px';
+                        const urlInput = document.createElement('input');
+                        urlInput.type = 'url';
+                        urlInput.value = project.url || '';
+                        urlInput.placeholder = 'https://...';
+                        urlInput.oninput = (e) => {
+                            project.url = e.target.value;
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        const tagsLabel = document.createElement('label');
+                        tagsLabel.textContent = 'Tags (comma-separated)';
+                        tagsLabel.style.fontSize = '12px';
+                        const tagsInput = document.createElement('input');
+                        tagsInput.type = 'text';
+                        tagsInput.value = project.tags || '';
+                        tagsInput.placeholder = 'software, video game, woodworking';
+                        tagsInput.oninput = (e) => {
+                            project.tags = e.target.value;
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        const dateActiveRow = document.createElement('div');
+                        dateActiveRow.style.display = 'grid';
+                        dateActiveRow.style.gridTemplateColumns = '1fr auto';
+                        dateActiveRow.style.gap = '10px';
+                        dateActiveRow.style.alignItems = 'end';
+                        
+                        const startedDateDiv = document.createElement('div');
+                        const startedDateLabel = document.createElement('label');
+                        startedDateLabel.textContent = 'Started Date';
+                        startedDateLabel.style.fontSize = '12px';
+                        const startedDateInput = document.createElement('input');
+                        startedDateInput.type = 'date';
+                        startedDateInput.value = project.startedDate || '';
+                        startedDateInput.oninput = (e) => {
+                            project.startedDate = e.target.value;
+                            updatePreview();
+                            markModified();
+                        };
+                        startedDateDiv.appendChild(startedDateLabel);
+                        startedDateDiv.appendChild(startedDateInput);
+                        
+                        const statusDiv = document.createElement('div');
+                        const statusLabel = document.createElement('label');
+                        statusLabel.textContent = 'Status';
+                        statusLabel.style.fontSize = '12px';
+                        const statusSelect = document.createElement('select');
+                        statusSelect.style.padding = '6px';
+                        statusSelect.style.fontSize = '12px';
+                        
+                        const statusOptions = ['Active', 'Completed', 'Defunct', 'On Hold', 'Archived'];
+                        statusOptions.forEach(option => {
+                            const optionEl = document.createElement('option');
+                            optionEl.value = option;
+                            optionEl.textContent = option;
+                            if ((project.status || 'Active') === option) {
+                                optionEl.selected = true;
+                            }
+                            statusSelect.appendChild(optionEl);
+                        });
+                        
+                        statusSelect.onchange = (e) => {
+                            project.status = e.target.value;
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        statusDiv.appendChild(statusLabel);
+                        statusDiv.appendChild(statusSelect);
+                        
+                        dateActiveRow.appendChild(startedDateDiv);
+                        dateActiveRow.appendChild(statusDiv);
+                        
+                        const descLabel = document.createElement('label');
+                        descLabel.textContent = 'Description';
+                        descLabel.style.fontSize = '12px';
+                        const descTextarea = document.createElement('textarea');
+                        descTextarea.value = project.description || '';
+                        descTextarea.rows = 3;
+                        descTextarea.oninput = (e) => {
+                            project.description = e.target.value;
+                            updatePreview();
+                            markModified();
+                        };
+                        
+                        projectItem.appendChild(projectControls);
+                        projectItem.appendChild(titleLabel);
+                        projectItem.appendChild(titleInput);
+                        projectItem.appendChild(urlLabel);
+                        projectItem.appendChild(urlInput);
+                        projectItem.appendChild(tagsLabel);
+                        projectItem.appendChild(tagsInput);
+                        projectItem.appendChild(dateActiveRow);
+                        projectItem.appendChild(descLabel);
+                        projectItem.appendChild(descTextarea);
+                        
+                        content.appendChild(projectItem);
+                    });
+                } else {
+                    // Word Cloud type with simple textarea
+                    const contentLabel = document.createElement('label');
+                    contentLabel.textContent = 'Content (one item per line)';
+                    const contentTextarea = document.createElement('textarea');
+                    contentTextarea.value = typeof section.content === 'string' ? section.content : '';
+                    contentTextarea.rows = 6;
+                    contentTextarea.oninput = (e) => updateDynamicSection(index, 'content', e.target.value);
+                    
+                    content.appendChild(contentLabel);
+                    content.appendChild(contentTextarea);
+                }
+                
+                item.appendChild(header);
+                item.appendChild(content);
+                container.appendChild(item);
+                
+                // Restore expanded state
+                if (expandedStates[index]) {
+                    content.classList.add('expanded');
+                    const icon = header.querySelector('.collapse-icon');
+                    if (icon) icon.classList.add('expanded');
+                }
+            });
+        }
+
+        function toggleDynamicSection(index) {
+            const content = document.getElementById(`section-content-${index}`);
+            const icon = content.previousElementSibling.querySelector('.collapse-icon');
+            if (content && icon) {
+                content.classList.toggle('expanded');
+                icon.classList.toggle('expanded');
+            }
+        }
+
+        function calculateTotalYears(jobs) {
+            if (!Array.isArray(jobs) || jobs.length === 0) return 0;
+            
+            let totalMonths = 0;
+            const now = new Date();
+            
+            jobs.forEach(job => {
+                if (!job.startDate) return;
+                
+                const start = new Date(job.startDate);
+                let end;
+                
+                // Empty end date means ongoing
+                if (!job.endDate) {
+                    end = now;
+                } else {
+                    end = new Date(job.endDate);
+                }
+                
+                // Calculate months between dates
+                const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+                if (months > 0) {
+                    totalMonths += months;
+                }
+            });
+            
+            return totalMonths / 12;
+        }
+
+        function markModified() {
+            if (!isModified) {
+                isModified = true;
+                updateStatus();
+            }
+            
+            // Debounce: commit as new version after user stops typing for 3 seconds
+            clearTimeout(versionCommitTimer);
+            versionCommitTimer = setTimeout(() => {
+                commitNewVersion();
+            }, VERSION_COMMIT_DELAY);
+        }
+        
+        function commitNewVersion() {
+            // Create a new version with a new ID for navigation
+            currentVersionId = Date.now();
+            
+            // Save as new version in history
+            saveToLocalStorage();
+            
+            console.log(`Committed new version: ${currentVersionId}`);
+        }
+
+        function markSaved() {
+            isModified = false;
+            lastSavedData = JSON.stringify(getResumeData());
+            saveToLocalStorage();
+            updateStatus();
+            // Show saved indicator temporarily
+            document.getElementById('statusSaved').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('statusSaved').classList.add('hidden');
+            }, 2000);
+        }
+
+        function updateStatus() {
+            const fileStatus = document.getElementById('statusFile');
+            const modifiedStatus = document.getElementById('statusModified');
+            
+            // Helper function to display name without .json extension
+            const displayName = (fileName) => {
+                if (!fileName || fileName === 'No file loaded') return 'No file loaded';
+                return fileName.toLowerCase().endsWith('.json') ? fileName.slice(0, -5) : fileName;
+            };
+            
+            fileStatus.textContent = displayName(currentFileName);
+            
+            if (isModified) {
+                modifiedStatus.classList.remove('hidden');
+            } else {
+                modifiedStatus.classList.add('hidden');
+            }
+        }
+
+        function saveToLocalStorage() {
+            try {
+                const timestamp = new Date().toISOString();
+                const version = {
+                    id: currentVersionId || Date.now(),
+                    resumeData: getResumeData(),
+                    fileName: currentFileName,
+                    timestamp: timestamp,
+                    isAutoSave: true
+                };
+                
+                // Load existing history
+                loadVersionHistory();
+                
+                // Always update or add at the front
+                const existingIndex = versionHistory.findIndex(v => v.id === version.id);
+                if (existingIndex >= 0) {
+                    // Remove old position
+                    versionHistory.splice(existingIndex, 1);
+                }
+                
+                // Always add to front (most recent)
+                versionHistory.unshift(version);
+                
+                // Keep only MAX_VERSIONS
+                if (versionHistory.length > MAX_VERSIONS) {
+                    versionHistory = versionHistory.slice(0, MAX_VERSIONS);
+                }
+                
+                localStorage.setItem('resumeEditor_history', JSON.stringify(versionHistory));
+                localStorage.setItem('resumeEditor_currentVersionId', currentVersionId);
+                updateVersionStatus();
+            } catch (err) {
+                console.error('Error saving to localStorage:', err);
+            }
+        }
+
+        function loadVersionHistory() {
+            try {
+                const saved = localStorage.getItem('resumeEditor_history');
+                if (saved) {
+                    versionHistory = JSON.parse(saved);
+                } else {
+                    versionHistory = [];
+                }
+            } catch (err) {
+                console.error('Error loading version history:', err);
+                versionHistory = [];
+            }
+        }
+
+        function updateVersionStatus() {
+            const statusVersion = document.getElementById('statusVersion');
+            if (currentVersionId && versionHistory.length > 0) {
+                const currentIndex = versionHistory.findIndex(v => v.id === currentVersionId);
+                if (currentIndex >= 0) {
+                    const version = versionHistory[currentIndex];
+                    const date = new Date(version.timestamp);
+                    statusVersion.textContent = ` | ${date.toLocaleString()}`;
+                    
+                    // Filter versions by same file name
+                    const currentName = currentFileName || 'Untitled Resume';
+                    const sameNameVersions = versionHistory.filter(v => (v.fileName || 'Untitled Resume') === currentName);
+                    const sameNameIndex = sameNameVersions.findIndex(v => v.id === currentVersionId);
+                    
+                    // Update nav buttons
+                    document.getElementById('prevVersion').disabled = sameNameIndex >= sameNameVersions.length - 1;
+                    document.getElementById('nextVersion').disabled = sameNameIndex <= 0;
+                }
+            }
+        }
+
+        function loadPreviousVersion() {
+            const currentName = currentFileName || 'Untitled Resume';
+            const sameNameVersions = versionHistory.filter(v => (v.fileName || 'Untitled Resume') === currentName);
+            const currentIndex = sameNameVersions.findIndex(v => v.id === currentVersionId);
+            if (currentIndex >= 0 && currentIndex < sameNameVersions.length - 1) {
+                loadVersion(sameNameVersions[currentIndex + 1]);
+            }
+        }
+
+        function loadNextVersion() {
+            const currentName = currentFileName || 'Untitled Resume';
+            const sameNameVersions = versionHistory.filter(v => (v.fileName || 'Untitled Resume') === currentName);
+            const currentIndex = sameNameVersions.findIndex(v => v.id === currentVersionId);
+            if (currentIndex > 0) {
+                loadVersion(sameNameVersions[currentIndex - 1]);
+            }
+        }
+
+        function loadVersion(version) {
+            // Migrate data if needed
+            const migrated = migrateResumeData(version.resumeData);
+            
+            document.getElementById('name').value = migrated.name || '';
+            document.getElementById('tagline').value = migrated.tagline || '';
+            document.getElementById('summary').value = migrated.summary || '';
+            contactInfo = migrated.contactInfo || [];
+            sections = migrated.sections || [];
+            
+            currentFileName = version.fileName || 'Untitled Resume';
+            currentVersionId = version.id;
+            currentFileHandle = null;
+            isModified = false;
+            
+            // Clear the closed flag when opening a resume
+            localStorage.removeItem('resumeEditor_closedByUser');
+            // Save current version ID so it persists across page refresh
+            localStorage.setItem('resumeEditor_currentVersionId', currentVersionId);
+            
+            renderContactInfo();
+            renderSections();
+            updatePreview();
+            updateStatus();
+            updateVersionStatus();
+            
+            // Show editor
+            document.getElementById('welcomeDialog').classList.add('hidden');
+            document.getElementById('mainContainer').classList.remove('hidden');
+        }
+
+        function renderVersionHistory() {
+            loadVersionHistory();
+            const container = document.getElementById('versionList');
+            const historySection = document.getElementById('versionHistory');
+            
+            if (versionHistory.length === 0) {
+                historySection.classList.add('hidden');
+                return;
+            }
+            
+            historySection.classList.remove('hidden');
+            
+            // Update header with clear button if not already present
+            const header = historySection.querySelector('h2');
+            if (header && !header.querySelector('.clear-data-btn')) {
+                const clearBtn = document.createElement('button');
+                clearBtn.className = 'btn btn-danger btn-small clear-data-btn';
+                clearBtn.textContent = '🗑️ Clear All';
+                clearBtn.style.fontSize = '11px';
+                clearBtn.style.padding = '4px 10px';
+                clearBtn.onclick = clearAllData;
+                header.appendChild(clearBtn);
+            }
+            
+            container.innerHTML = '';
+            
+            // Group versions by file name
+            const grouped = {};
+            versionHistory.forEach(version => {
+                const fileName = version.fileName || 'Untitled Resume';
+                if (!grouped[fileName]) {
+                    grouped[fileName] = [];
+                }
+                grouped[fileName].push(version);
+            });
+            
+            // Sort each group by timestamp (newest first)
+            Object.keys(grouped).forEach(key => {
+                grouped[key].sort((a, b) => b.timestamp - a.timestamp);
+            });
+            
+            // Render each resume group
+            Object.keys(grouped).forEach(fileName => {
+                const versions = grouped[fileName];
+                const latestVersion = versions[0];
+                const displayName = fileName.toLowerCase().endsWith('.json') ? fileName.slice(0, -5) : fileName;
+                
+                const group = document.createElement('div');
+                group.className = 'resume-group';
+                
+                const groupHeader = document.createElement('div');
+                groupHeader.className = 'resume-group-header';
+                
+                const info = document.createElement('div');
+                info.className = 'resume-group-info';
+                
+                const name = document.createElement('div');
+                name.className = 'resume-group-name';
+                name.textContent = displayName;
+                
+                const meta = document.createElement('div');
+                meta.className = 'resume-group-meta';
+                const date = new Date(latestVersion.timestamp);
+                meta.textContent = `${date.toLocaleString()} • ${versions.length} version${versions.length > 1 ? 's' : ''}`;
+                
+                info.appendChild(name);
+                info.appendChild(meta);
+                
+                const actions = document.createElement('div');
+                actions.className = 'resume-group-actions';
+                
+                // Create button group for load button + dropdown
+                const buttonGroup = document.createElement('div');
+                buttonGroup.className = 'btn-group';
+                
+                // Load latest button
+                const loadBtn = document.createElement('button');
+                loadBtn.className = 'btn btn-success btn-small';
+                loadBtn.textContent = 'Load';
+                loadBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    loadVersion(latestVersion);
+                };
+                
+                buttonGroup.appendChild(loadBtn);
+                
+                // Version dropdown (always show for consistent styling)
+                const dropdown = document.createElement('div');
+                dropdown.className = 'version-dropdown';
+                
+                const toggle = document.createElement('button');
+                toggle.className = 'btn btn-success btn-small dropdown-toggle';
+                toggle.textContent = '▼';
+                toggle.onclick = (e) => {
+                    e.stopPropagation();
+                    const menu = dropdown.querySelector('.dropdown-menu');
+                    
+                    // Close all other dropdowns first
+                    document.querySelectorAll('.dropdown-menu.show').forEach(m => {
+                        if (m !== menu) m.classList.remove('show');
+                    });
+                    
+                    // Toggle current dropdown
+                    const isShowing = menu.classList.toggle('show');
+                    
+                    // Position the menu using fixed positioning
+                    if (isShowing) {
+                        const rect = toggle.getBoundingClientRect();
+                        menu.style.top = (rect.bottom + 4) + 'px';
+                        menu.style.left = (rect.right - 200) + 'px'; // 200 is min-width of menu
+                    }
+                };
+                
+                const menu = document.createElement('div');
+                menu.className = 'dropdown-menu';
+                
+                versions.forEach((version, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item';
+                    
+                    const itemLabel = document.createElement('div');
+                    itemLabel.textContent = index === 0 ? 'Latest' : `Version ${index + 1}`;
+                    
+                    const itemTime = document.createElement('div');
+                    itemTime.className = 'dropdown-item-time';
+                    const itemDate = new Date(version.timestamp);
+                    itemTime.textContent = itemDate.toLocaleString();
+                    
+                    item.appendChild(itemLabel);
+                    item.appendChild(itemTime);
+                    
+                    item.onclick = (e) => {
+                        e.stopPropagation();
+                        menu.classList.remove('show');
+                        loadVersion(version);
+                    };
+                    
+                    menu.appendChild(item);
+                });
+                
+                dropdown.appendChild(toggle);
+                dropdown.appendChild(menu);
+                buttonGroup.appendChild(dropdown);
+                
+                actions.appendChild(buttonGroup);
+                
+                // Delete button (icon only)
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-danger btn-small';
+                deleteBtn.textContent = '🗑️';
+                deleteBtn.title = 'Delete all versions of this resume';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (confirm(`Delete all ${versions.length} version${versions.length > 1 ? 's' : ''} of "${displayName}"?`)) {
+                        versions.forEach(v => deleteVersion(v.id));
+                    }
+                };
+                actions.appendChild(deleteBtn);
+                
+                groupHeader.appendChild(info);
+                groupHeader.appendChild(actions);
+                group.appendChild(groupHeader);
+                
+                container.appendChild(group);
+            });
+            
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.version-dropdown')) {
+                    document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                        menu.classList.remove('show');
+                    });
+                }
+            });
+        }
+
+        function deleteVersion(versionId) {
+            loadVersionHistory();
+            versionHistory = versionHistory.filter(v => v.id !== versionId);
+            localStorage.setItem('resumeEditor_history', JSON.stringify(versionHistory));
+            renderVersionHistory();
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear ALL saved resume data? This cannot be undone.')) {
+                localStorage.removeItem('resumeEditor_history');
+                localStorage.removeItem('resumeEditor_currentVersionId');
+                localStorage.removeItem('resumeEditor_closedByUser');
+                versionHistory = [];
+                renderVersionHistory();
+                alert('All data has been cleared.');
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                loadVersionHistory();
+                
+                // Try to load last current version
+                const lastVersionId = localStorage.getItem('resumeEditor_currentVersionId');
+                if (lastVersionId && versionHistory.length > 0) {
+                    const version = versionHistory.find(v => v.id == lastVersionId);
+                    if (version) {
+                        loadVersion(version);
+                        return true;
+                    }
+                }
+                
+                // Otherwise load most recent version
+                if (versionHistory.length > 0) {
+                    loadVersion(versionHistory[0]);
+                    return true;
+                }
+                
+                return false;
+            } catch (err) {
+                console.error('Error loading from localStorage:', err);
+                return false;
+            }
+        }
+
+        function closeResume() {
+            // Always show confirmation modal
+            document.getElementById('closeModal').classList.remove('hidden');
+        }
+
+        function showCloseModal() {
+            document.getElementById('closeModal').classList.remove('hidden');
+        }
+
+        function handleCloseCancel() {
+            document.getElementById('closeModal').classList.add('hidden');
+        }
+
+        function handleCloseConfirm() {
+            // Save any changes to local storage before closing
+            if (isModified) {
+                saveToLocalStorage();
+            }
+            
+            document.getElementById('closeModal').classList.add('hidden');
+            performClose();
+        }
+
+        function editFileName() {
+            if (!currentFileName || currentFileName === 'No file loaded') {
+                return;
+            }
+            
+            // Remove .json extension if present
+            let nameWithoutExt = currentFileName;
+            if (nameWithoutExt.toLowerCase().endsWith('.json')) {
+                nameWithoutExt = nameWithoutExt.slice(0, -5);
+            }
+            
+            document.getElementById('newFileName').value = nameWithoutExt;
+            document.getElementById('renameModal').classList.remove('hidden');
+        }
+
+        function handleRenameCancel() {
+            document.getElementById('renameModal').classList.add('hidden');
+        }
+
+        function handleRenameConfirm() {
+            let newName = document.getElementById('newFileName').value.trim();
+            if (!newName) {
+                alert('Please enter a valid name');
+                return;
+            }
+            
+            // Remove .json extension if user added it
+            if (newName.toLowerCase().endsWith('.json')) {
+                newName = newName.slice(0, -5);
+            }
+            
+            // Add .json extension
+            const newFileName = newName + '.json';
+            const action = document.getElementById('renameAction').value;
+            const oldFileName = currentFileName;
+            
+            if (action === 'all') {
+                // Rename all versions with the same name
+                versionHistory.forEach(version => {
+                    if (version.fileName === oldFileName) {
+                        version.fileName = newFileName;
+                    }
+                });
+                localStorage.setItem('resumeEditor_history', JSON.stringify(versionHistory));
+            } else if (action === 'new') {
+                // Create new resume - clear version history for this resume
+                currentVersionId = null;
+                versionHistory = versionHistory.filter(v => v.fileName !== oldFileName);
+                localStorage.setItem('resumeEditor_history', JSON.stringify(versionHistory));
+                markModified();
+            }
+            
+            currentFileName = newFileName;
+            currentFileHandle = null; // Clear file handle since name changed
+            updateStatus();
+            updateVersionStatus();
+            
+            document.getElementById('renameModal').classList.add('hidden');
+        }
+
+        // Share functionality with encryption support
+        function openShareModal() {
+            document.getElementById('shareModal').classList.remove('hidden');
+            document.getElementById('sharePasswordEnabled').checked = false;
+            document.getElementById('sharePasswordSection').classList.add('hidden');
+            document.getElementById('shareResultSection').classList.add('hidden');
+            document.getElementById('sharePassword').value = '';
+            document.getElementById('shareLink').value = '';
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.add('hidden');
+        }
+
+        function toggleSharePassword() {
+            const enabled = document.getElementById('sharePasswordEnabled').checked;
+            const section = document.getElementById('sharePasswordSection');
+            if (enabled) {
+                section.classList.remove('hidden');
+            } else {
+                section.classList.add('hidden');
+            }
+        }
+
+        async function generateShareLink() {
+            const data = getResumeData();
+            const passwordEnabled = document.getElementById('sharePasswordEnabled').checked;
+            const password = document.getElementById('sharePassword').value;
+
+            if (passwordEnabled && !password) {
+                alert('Please enter a password');
+                return;
+            }
+
+            try {
+                let encoded;
+                if (passwordEnabled) {
+                    // Encrypt the data
+                    const encrypted = await encryptResumeData(data, password);
+                    encoded = 'v3:enc:' + encrypted;
+                } else {
+                    // Plain encoding
+                    const json = JSON.stringify(data);
+                    encoded = 'v3:plain:' + base64UrlEncode(json);
+                }
+
+                const url = new URL(window.location.href);
+                url.searchParams.set('resume', encoded);
+                
+                document.getElementById('shareLink').value = url.toString();
+                document.getElementById('shareResultSection').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error generating share link:', error);
+                alert('Error generating share link: ' + error.message);
+            }
+        }
+
+        function copyShareLink() {
+            const input = document.getElementById('shareLink');
+            input.select();
+            document.execCommand('copy');
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+            }, 2000);
+        }
+
+        // Encryption utilities using Web Crypto API
+        function base64UrlEncode(str) {
+            const base64 = btoa(unescape(encodeURIComponent(str)));
+            return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        }
+
+        function base64UrlDecode(str) {
+            str = str.replace(/-/g, '+').replace(/_/g, '/');
+            while (str.length % 4) {
+                str += '=';
+            }
+            return decodeURIComponent(escape(atob(str)));
+        }
+
+        async function encryptResumeData(data, password) {
+            const json = JSON.stringify(data);
+            const encoder = new TextEncoder();
+            const dataBuffer = encoder.encode(json);
+
+            // Generate salt for key derivation
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+
+            // Derive key from password
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw',
+                encoder.encode(password),
+                'PBKDF2',
+                false,
+                ['deriveBits', 'deriveKey']
+            );
+
+            const key = await crypto.subtle.deriveKey(
+                {
+                    name: 'PBKDF2',
+                    salt: salt,
+                    iterations: 100000,
+                    hash: 'SHA-256'
+                },
+                keyMaterial,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt']
+            );
+
+            // Generate IV
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+
+            // Encrypt
+            const encrypted = await crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv: iv },
+                key,
+                dataBuffer
+            );
+
+            // Combine salt + iv + encrypted data
+            const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+            combined.set(salt, 0);
+            combined.set(iv, salt.length);
+            combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+
+            // Convert to base64url
+            return base64UrlEncode(String.fromCharCode(...combined));
+        }
+
+        async function decryptResumeData(encryptedData, password) {
+            const encoder = new TextEncoder();
+            const decoder = new TextDecoder();
+
+            // Decode from base64url
+            const combined = Uint8Array.from(base64UrlDecode(encryptedData), c => c.charCodeAt(0));
+
+            // Extract salt, iv, and encrypted data
+            const salt = combined.slice(0, 16);
+            const iv = combined.slice(16, 28);
+            const encrypted = combined.slice(28);
+
+            // Derive key from password
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw',
+                encoder.encode(password),
+                'PBKDF2',
+                false,
+                ['deriveBits', 'deriveKey']
+            );
+
+            const key = await crypto.subtle.deriveKey(
+                {
+                    name: 'PBKDF2',
+                    salt: salt,
+                    iterations: 100000,
+                    hash: 'SHA-256'
+                },
+                keyMaterial,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['decrypt']
+            );
+
+            // Decrypt
+            const decrypted = await crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv: iv },
+                key,
+                encrypted
+            );
+
+            const json = decoder.decode(decrypted);
+            return JSON.parse(json);
+        }
+
+        // Check for shared resume in URL on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const resumeParam = urlParams.get('resume');
+
+            if (resumeParam) {
+                try {
+                    if (resumeParam.startsWith('v3:enc:') || resumeParam.startsWith('v2:enc:')) {
+                        // Encrypted resume
+                        const encryptedData = resumeParam.substring(7); // Both v2 and v3 have same offset
+                        const password = prompt('This resume is password protected. Enter password:');
+                        
+                        if (password) {
+                            try {
+                                const data = await decryptResumeData(encryptedData, password);
+                                loadResumeFromData(data);
+                            } catch (error) {
+                                alert('Incorrect password or corrupted data');
+                            }
+                        }
+                    } else if (resumeParam.startsWith('v3:plain:') || resumeParam.startsWith('v2:plain:')) {
+                        // Plain resume
+                        const encryptedOffset = resumeParam.startsWith('v3:') ? 9 : 9; // Same offset
+                        const encodedData = resumeParam.substring(9);
+                        const json = base64UrlDecode(encodedData);
+                        const data = JSON.parse(json);
+                        loadResumeFromData(data);
+                    } else {
+                        console.warn('Unknown resume format in URL');
+                    }
+                } catch (error) {
+                    console.error('Error loading shared resume:', error);
+                    alert('Error loading shared resume');
+                }
+            }
+        });
+
+        function loadResumeFromData(data) {
+            // Migrate data if needed
+            const migrated = migrateResumeData(data);
+            
+            document.getElementById('name').value = migrated.name || '';
+            document.getElementById('tagline').value = migrated.tagline || '';
+            document.getElementById('summary').value = migrated.summary || '';
+            contactInfo = migrated.contactInfo || [];
+            sections = migrated.sections || [];
+            experiences = migrated.experiences || [];
+            
+            currentFileName = migrated.name ? (migrated.name + ' (Shared)') : 'Shared Resume';
+            currentVersionId = null;
+            currentFileHandle = null;
+            isModified = true; // Mark as modified so user can save
+            
+            renderContactInfo();
+            renderSections();
+            updatePreview();
+            updateStatus();
+            
+            // Show editor
+            document.getElementById('welcomeDialog').classList.add('hidden');
+            document.getElementById('mainContainer').classList.remove('hidden');
+            
+            // Clear URL parameter
+            const url = new URL(window.location.href);
+            url.searchParams.delete('resume');
+            window.history.replaceState({}, '', url);
+        }
+
+        function performClose() {
+            
+            // Clear all form fields
+            document.getElementById('name').value = '';
+            document.getElementById('tagline').value = '';
+            document.getElementById('summary').value = '';
+            contactInfo = [];
+            sections = [];
+            
+            // Clear state
+            currentFileName = null;
+            currentFileHandle = null;
+            isModified = false;
+            lastSavedData = null;
+            currentVersionId = null;
+            
+            // Clear current version ID but keep history
+            localStorage.removeItem('resumeEditor_currentVersionId');
+            
+            // Set flag that user closed the resume
+            localStorage.setItem('resumeEditor_closedByUser', 'true');
+            
+            // Hide editor and show welcome dialog
+            document.getElementById('mainContainer').classList.add('hidden');
+            document.getElementById('welcomeDialog').classList.remove('hidden');
+            
+            // Refresh version history to show any new versions
+            renderVersionHistory();
+            
+            // Clear preview
+            document.getElementById('preview').innerHTML = '';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        function formatDateForDisplay(dateStr) {
+            // Convert ISO8601 (YYYY-MM-DD) to "Mon YYYY" format for display
+            if (!dateStr) return '';
+            
+            // Parse date components directly to avoid timezone issues
+            const parts = dateStr.split('-');
+            if (parts.length < 2) return dateStr;
+            
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; // 0-indexed
+            
+            if (isNaN(year) || isNaN(month) || month < 0 || month > 11) return dateStr;
+            
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${monthNames[month]} ${year}`;
+        }
+
+        function updatePreview() {
+            const name = document.getElementById('name').value;
+            const tagline = document.getElementById('tagline').value;
+            const summary = document.getElementById('summary').value;
+
+            // Build content sections as separate pieces for intelligent page breaks
+            const previewSections = [];
+            
+            // Header section (always on first page)
+            const contactHtml = contactInfo.map(contact => {
+                const icon = CONTACT_TYPES[contact.type]?.icon || '📄';
+                return `<span>${icon} ${escapeHtml(contact.value)}</span>`;
+            }).join('\n');
+            
+            previewSections.push({
+                html: `
+                    <h1>${escapeHtml(name)}</h1>
+                    ${tagline ? '<div style="font-size: 6pt; color: #ccc; margin-top: -5px; margin-bottom: 12px; margin-left: 2px;">' + escapeHtml(tagline) + '</div>' : ''}
+                    <div class="contact-info">
+                        ${contactHtml}
+                    </div>
+                `,
+                height: 70,
+                keepTogether: true
+            });
+            
+            // Summary section
+            if (summary) {
+                const summaryLines = (summary || '').split('\n').length;
+                const summaryCharCount = (summary || '').length;
+                const summaryWrappedLines = Math.ceil(summaryCharCount / 124);
+                previewSections.push({
+                    html: `
+                        <div class="section-header">SUMMARY</div>
+                        <div class="summary">${escapeHtml(summary).replace(/\n/g, '<br>')}</div>
+                    `,
+                    height: 30 + (Math.max(summaryLines, summaryWrappedLines) * 12),
+                    keepTogether: true
+                });
+            }
+            
+            // Dynamic sections
+            sections.forEach(section => {
+                if (!section.content) return;
+                
+                if (section.type === 'word-cloud') {
+                    // Word Cloud type: bullet-point list
+                    const items = section.content.split('\n').filter(s => s.trim());
+                    const charCount = items.join(' • ').length;
+                    const wrappedLines = Math.ceil(charCount / 120);
+                    previewSections.push({
+                        html: `
+                            <div class="section-header">${escapeHtml(section.title).toUpperCase()}</div>
+                            <div class="skills-section">
+                                ${escapeHtml(section.content).split('\n').filter(s => s.trim()).join(' • ')}
+                            </div>
+                        `,
+                        height: 30 + (wrappedLines * 12),
+                        keepTogether: true
+                    });
+                } else if (section.type === 'subject-areas') {
+                    // Subject Areas type: labeled subsections
+                    const subsections = Array.isArray(section.content) ? section.content : [];
+                    if (subsections.length === 0) return;
+                    
+                    const subsectionsHtml = subsections.map(sub => 
+                        `<div class="skills-section">
+                            <strong>${escapeHtml(sub.label)}:</strong> <span class="skills-list">${escapeHtml(sub.value)}</span>
+                        </div>`
+                    ).join('\n');
+                    
+                    // Calculate height: each subsection is ~12pt line plus wrapping
+                    const subsectionLines = subsections.reduce((total, sub) => {
+                        const text = sub.label + ': ' + sub.value;
+                        return total + Math.max(1, Math.ceil(text.length / 120));
+                    }, 0);
+                    
+                    previewSections.push({
+                        html: `
+                            <div class="section-header">${escapeHtml(section.title).toUpperCase()}</div>
+                            ${subsectionsHtml}
+                        `,
+                        height: 30 + (subsectionLines * 12),
+                        keepTogether: false
+                    });
+                } else if (section.type === 'work-history') {
+                    // Work History type: job experiences with dates
+                    const jobs = Array.isArray(section.content) ? section.content : [];
+                    if (jobs.length === 0) return;
+                    
+                    // Calculate total years of experience
+                    const totalYears = calculateTotalYears(jobs);
+                    const showYears = section.showTotalYears !== false; // Default to true
+                    const yearsDisplay = (showYears && totalYears > 0) ? `<span class="section-header-years">${totalYears.toFixed(1)} years</span>` : '';
+                    
+                    // Add section header with total years
+                    previewSections.push({
+                        html: `<div class="section-header"><span>${escapeHtml(section.title).toUpperCase()}</span>${yearsDisplay}</div>`,
+                        height: 24,
+                        keepTogether: false
+                    });
+                    
+                    // Each job as a separate section
+                    jobs.forEach(job => {
+                        const descCharCount = (job.description || '').length;
+                        const descWrappedLines = Math.ceil(descCharCount / 124);
+                        const descParagraphs = (job.description || '').split('\n\n').length;
+                        
+                        // Format dates for display
+                        const startDisplay = formatDateForDisplay(job.startDate);
+                        const endDisplay = job.endDate ? formatDateForDisplay(job.endDate) : 'Present';
+                        
+                        previewSections.push({
+                            html: `
+                                <div class="job-header">
+                                    <div>
+                                        <div class="job-title">${escapeHtml(job.title)}</div>
+                                        <div class="company">${escapeHtml(job.company)}</div>
+                                    </div>
+                                    <div class="date">${escapeHtml(startDisplay)} – ${escapeHtml(endDisplay)}</div>
+                                </div>
+                                <div class="job-description">${escapeHtml(job.description).replace(/\n\n/g, '</div><div class="job-description">').replace(/\n/g, ' ')}</div>
+                            `,
+                            height: 33 + (descWrappedLines * 12) + (descParagraphs * 7),
+                            keepTogether: true
+                        });
+                    });
+                } else if (section.type === 'project-list') {
+                    // Project List type: projects with details
+                    const projects = Array.isArray(section.content) ? section.content : [];
+                    if (projects.length === 0) return;
+                    
+                    // Add section header
+                    previewSections.push({
+                        html: `<div class="section-header"><span>${escapeHtml(section.title).toUpperCase()}</span></div>`,
+                        height: 24,
+                        keepTogether: false
+                    });
+                    
+                    // Each project as a separate section
+                    projects.forEach(project => {
+                        const descCharCount = (project.description || '').length;
+                        const descWrappedLines = Math.ceil(descCharCount / 124);
+                        const descParagraphs = (project.description || '').split('\n\n').length;
+                        
+                        // Format date for display with "circa"
+                        let dateDisplay = '';
+                        if (project.startedDate) {
+                            const startedFormatted = formatDateForDisplay(project.startedDate);
+                            dateDisplay = startedFormatted ? `circa ${startedFormatted}` : '';
+                        }
+                        
+                        const statusDisplay = project.status || 'Active';
+                        
+                        // Format tags
+                        const tagsDisplay = project.tags ? ` • ${escapeHtml(project.tags)}` : '';
+                        
+                        // Format title with optional URL
+                        const titleHtml = project.url ? 
+                            `<a href="${escapeHtml(project.url)}" style="color: inherit; text-decoration: underline;">${escapeHtml(project.title)}</a>` : 
+                            escapeHtml(project.title);
+                        
+                        // URL line for display below description
+                        const urlLine = project.url ? `<div class="job-description" style="font-style: italic; color: #666;">${escapeHtml(project.url)}</div>` : '';
+                        
+                        // Calculate height including URL line
+                        const urlHeight = project.url ? 12 : 0;
+                        
+                        previewSections.push({
+                            html: `
+                                <div class="job-header">
+                                    <div>
+                                        <div class="job-title">${titleHtml}</div>
+                                        <div class="company" style="font-size: 9pt;">${escapeHtml(statusDisplay)}${tagsDisplay}</div>
+                                    </div>
+                                    <div class="date">${escapeHtml(dateDisplay)}</div>
+                                </div>
+                                <div class="job-description">${escapeHtml(project.description).replace(/\n\n/g, '</div><div class="job-description">').replace(/\n/g, ' ')}</div>
+                                ${urlLine}
+                            `,
+                            height: 33 + (descWrappedLines * 12) + (descParagraphs * 7) + urlHeight,
+                            keepTogether: true
+                        });
+                    });
+                }
+            });
+            
+            
+            // Distribute sections across pages
+            // Page height optimized for 8.5x11 with 0.35in padding
+            const pageHeight = 680;
+            const pages = [];
+            let currentPage = [];
+            let currentHeight = 0;
+            
+            previewSections.forEach(section => {
+                // If this section would overflow and should be kept together, start new page
+                if (section.keepTogether && currentHeight + section.height > pageHeight && currentPage.length > 0) {
+                    pages.push(currentPage);
+                    currentPage = [section];
+                    currentHeight = section.height;
+                } else if (currentHeight + section.height > pageHeight && currentPage.length > 0) {
+                    // Can split, but start new page
+                    pages.push(currentPage);
+                    currentPage = [section];
+                    currentHeight = section.height;
+                } else {
+                    // Fits on current page
+                    currentPage.push(section);
+                    currentHeight += section.height;
+                }
+            });
+            
+            // Add last page
+            if (currentPage.length > 0) {
+                pages.push(currentPage);
+            }
+            
+            // Render pages
+            const preview = document.getElementById('preview');
+            preview.innerHTML = pages.map((pageSections, pageIndex) => `
+                <div class="resume-page">
+                    ${pageSections.map(s => s.html).join('')}
+                    ${pageIndex < pages.length - 1 ? '<div class="resume-footer" style="margin-top: auto;">continued on page ' + (pageIndex + 2) + '</div>' : ''}
+                </div>
+            `).join('');
+        }
+
+        function exportToPDF() {
+            window.print();
+        }
+
+        function getResumeData() {
+            return {
+                schemaVersion: CURRENT_SCHEMA_VERSION,
+                name: document.getElementById('name').value,
+                tagline: document.getElementById('tagline').value,
+                summary: document.getElementById('summary').value,
+                contactInfo: contactInfo,
+                sections: sections
+            };
+        }
+
+        async function saveToFile() {
+            // Check if File System Access API is supported
+            if (!('showSaveFilePicker' in window)) {
+                alert('Your browser doesn\'t support the file picker. Use "Download Copy" instead or try Chrome/Edge.');
+                return false;
+            }
+            
+            const data = getResumeData();
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            
+            try {
+                const handle = currentFileHandle || await window.showSaveFilePicker({
+                    suggestedName: currentFileName && currentFileName !== 'New Resume' ? currentFileName : 'resume-data.json',
+                    types: [{
+                        description: 'JSON Files',
+                        accept: { 'application/json': ['.json'] }
+                    }]
+                });
+                const writable = await handle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+                currentFileHandle = handle;
+                currentFileName = handle.name;
+                markSaved();
+                return true;
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Error saving file:', err);
+                    alert('Error saving file: ' + err.message);
+                }
+                return false;
+            }
+        }
+        
+        function downloadCopy() {
+            const data = getResumeData();
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentFileName && currentFileName !== 'New Resume' ? currentFileName : 'resume-data.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function loadFromFile() {
+            document.getElementById('fileInput').click();
+        }
+
+        async function handleFileLoad(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            try {
+                const text = await file.text();
+                const parsed = JSON.parse(text);
+                
+                // Migrate data if needed
+                const migrated = migrateResumeData(parsed);
+                
+                document.getElementById('name').value = migrated.name || '';
+                document.getElementById('tagline').value = migrated.tagline || '';
+                document.getElementById('summary').value = migrated.summary || '';
+                contactInfo = migrated.contactInfo || [];
+                sections = migrated.sections || [];
+                experiences = migrated.experiences || [];
+                
+                // Show editor
+                document.getElementById('welcomeDialog').classList.add('hidden');
+                document.getElementById('mainContainer').classList.remove('hidden');
+                
+                // Set file info
+                currentFileName = file.name;
+                currentFileHandle = null; // File API doesn't provide handle
+                currentVersionId = Date.now();
+                isModified = false;
+                lastSavedData = text;
+                
+                renderContactInfo();
+                renderSections();
+                updatePreview();
+                updateStatus();
+                saveToLocalStorage();
+                updateVersionStatus();
+            } catch (err) {
+                alert('Error loading file: ' + err.message);
+            }
+            
+            // Reset file input
+            event.target.value = '';
+        }
+
+        // ==========================================
+        // AI Assistant Functions
+        // ==========================================
+
+        const AI_PROVIDERS = {
+            openai: {
+                name: 'OpenAI',
+                models: ['gpt-4o', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'],
+                defaultModel: 'gpt-4o',
+                endpoint: 'https://api.openai.com/v1/chat/completions'
+            },
+            anthropic: {
+                name: 'Anthropic (Claude)',
+                models: ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229'],
+                defaultModel: 'claude-3-5-sonnet-20241022',
+                endpoint: 'https://api.anthropic.com/v1/messages'
+            },
+            google: {
+                name: 'Google (Gemini)',
+                models: ['gemini-2.0-flash-exp', 'gemini-1.5-pro', 'gemini-1.5-flash'],
+                defaultModel: 'gemini-2.0-flash-exp',
+                endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/'
+            },
+            github: {
+                name: 'GitHub Copilot',
+                models: ['gpt-4o', 'gpt-4', 'gpt-3.5-turbo'],
+                defaultModel: 'gpt-4o',
+                endpoint: 'https://api.githubcopilot.com/chat/completions'
+            }
+        };
+
+        let aiConfig = {};
+        let currentAIProvider = null;
+        let aiChatHistory = [];
+
+        function initAIChat() {
+            // Load saved AI config from localStorage
+            const savedConfig = localStorage.getItem('resumeEditor_aiConfig');
+            if (savedConfig) {
+                try {
+                    aiConfig = JSON.parse(savedConfig);
+                } catch (e) {
+                    aiConfig = {};
+                }
+            }
+            
+            renderAISetupScreen();
+        }
+
+        function toggleAIChat() {
+            const chatWindow = document.getElementById('aiChatWindow');
+            chatWindow.classList.toggle('hidden');
+            
+            if (!chatWindow.classList.contains('hidden')) {
+                // Focus on input if chat is ready
+                const input = document.getElementById('aiChatInput');
+                if (input && input.style.display !== 'none') {
+                    input.focus();
+                }
+            }
+        }
+
+        function renderAISetupScreen() {
+            const content = document.getElementById('aiChatContent');
+            const controls = document.getElementById('aiChatControls');
+            
+            const hasCredentials = Object.keys(aiConfig).length > 0;
+            
+            if (hasCredentials) {
+                // Show provider management
+                renderProviderManagement();
+                controls.style.display = 'flex';
+                updateProviderSelect();
+            } else {
+                // Show initial setup screen
+                content.innerHTML = `
+                    <div class="ai-setup-screen">
+                        <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 12px; margin-bottom: 20px; font-size: 13px; color: #856404;">
+                            <strong>⚠️ Work In Progress:</strong> AI features are experimental and may not work correctly. Some providers (like GitHub Copilot) do not work from browsers.
+                        </div>
+                        <h4>🤖 AI Assistant</h4>
+                        <p>AI features are optional and completely local. Your API credentials are stored securely in your browser and never sent to any server except the AI provider you choose.</p>
+                        <p><strong>Connect an AI provider to get started:</strong></p>
+                        <div class="ai-providers">
+                            ${Object.entries(AI_PROVIDERS).map(([key, provider]) => `
+                                <div class="ai-provider-item">
+                                    <div>
+                                        <div class="ai-provider-name">${provider.name}</div>
+                                        <div class="ai-provider-status">Not connected</div>
+                                    </div>
+                                    <div class="ai-provider-actions">
+                                        <button class="btn btn-icon btn-success" onclick="showProviderConfig('${key}')">Connect</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                controls.style.display = 'none';
+            }
+        }
+
+        function renderProviderManagement() {
+            const content = document.getElementById('aiChatContent');
+            const connectedProviders = Object.keys(aiConfig);
+            
+            content.innerHTML = `
+                <div class="ai-setup-screen">
+                    <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 12px; margin-bottom: 20px; font-size: 13px; color: #856404;">
+                        <strong>⚠️ Work In Progress:</strong> AI features are experimental and may not work correctly. Some providers (like GitHub Copilot) do not work from browsers.
+                    </div>
+                    <h4>Connected AI Providers</h4>
+                    <div class="ai-providers">
+                        ${Object.entries(AI_PROVIDERS).map(([key, provider]) => {
+                            const isConnected = connectedProviders.includes(key);
+                            return `
+                                <div class="ai-provider-item ${isConnected ? 'connected' : ''}">
+                                    <div>
+                                        <div class="ai-provider-name">${provider.name}</div>
+                                        <div class="ai-provider-status ${isConnected ? 'connected' : ''}">
+                                            ${isConnected ? '✓ Connected' : 'Not connected'}
+                                        </div>
+                                    </div>
+                                    <div class="ai-provider-actions">
+                                        ${isConnected ? `
+                                            <button class="btn btn-icon" onclick="showProviderConfig('${key}')">Edit</button>
+                                            <button class="btn btn-icon btn-danger" onclick="disconnectProvider('${key}')">Disconnect</button>
+                                        ` : `
+                                            <button class="btn btn-icon btn-success" onclick="showProviderConfig('${key}')">Connect</button>
+                                        `}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    ${connectedProviders.length > 0 ? `
+                        <div style="margin-top: 20px; text-align: center;">
+                            <button class="btn btn-success" onclick="showChatInterface()">Start Chatting</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function showProviderConfig(provider) {
+            const content = document.getElementById('aiChatContent');
+            const providerInfo = AI_PROVIDERS[provider];
+            const existingConfig = aiConfig[provider] || {};
+            
+            const isGithub = provider === 'github';
+            const isGoogle = provider === 'google';
+            const isOpenAI = provider === 'openai';
+            const isAnthropic = provider === 'anthropic';
+            
+            content.innerHTML = `
+                <div class="ai-config-form">
+                    <h4>Configure ${providerInfo.name}</h4>
+                    
+                    ${isGithub ? `
+                        <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 12px; margin-bottom: 15px; font-size: 12px; color: #856404;">
+                            <strong>⚠️ Note:</strong> GitHub Copilot API may not work from browsers due to CORS restrictions. Consider using OpenAI, Anthropic, or Google instead.
+                        </div>
+                    ` : ''}
+                    
+                    <label>API Key:</label>
+                    <input type="password" id="apiKey" value="${existingConfig.apiKey || ''}" placeholder="Enter your API key">
+                    
+                    ${isGithub ? `
+                        <p style="font-size: 12px; color: #666; margin-top: -10px;">
+                            Get your key from <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings</a>
+                        </p>
+                    ` : ''}
+                    
+                    ${isGoogle ? `
+                        <p style="font-size: 12px; color: #666; margin-top: -10px;">
+                            Get your key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>
+                        </p>
+                    ` : ''}
+                    
+                    ${isOpenAI ? `
+                        <p style="font-size: 12px; color: #666; margin-top: -10px;">
+                            Get your key from <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Dashboard</a>
+                        </p>
+                    ` : ''}
+                    
+                    ${isAnthropic ? `
+                        <p style="font-size: 12px; color: #666; margin-top: -10px;">
+                            Get your key from <a href="https://console.anthropic.com/settings/keys" target="_blank">Anthropic Console</a>
+                        </p>
+                    ` : ''}
+                    
+                    <label>Default Model:</label>
+                    <select id="defaultModel">
+                        ${providerInfo.models.map(model => `
+                            <option value="${model}" ${(existingConfig.model || providerInfo.defaultModel) === model ? 'selected' : ''}>${model}</option>
+                        `).join('')}
+                    </select>
+                    
+                    <div class="form-actions">
+                        <button class="btn" onclick="renderAISetupScreen()">Cancel</button>
+                        <button class="btn btn-success" onclick="saveProviderConfig('${provider}')">Save</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function saveProviderConfig(provider) {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const model = document.getElementById('defaultModel').value;
+            
+            if (!apiKey) {
+                alert('Please enter an API key');
+                return;
+            }
+            
+            aiConfig[provider] = {
+                apiKey: apiKey,
+                model: model
+            };
+            
+            localStorage.setItem('resumeEditor_aiConfig', JSON.stringify(aiConfig));
+            renderAISetupScreen();
+        }
+
+        function disconnectProvider(provider) {
+            if (confirm(`Disconnect ${AI_PROVIDERS[provider].name}? This will delete your stored API key.`)) {
+                delete aiConfig[provider];
+                localStorage.setItem('resumeEditor_aiConfig', JSON.stringify(aiConfig));
+                
+                // If this was the current provider, reset
+                if (currentAIProvider === provider) {
+                    currentAIProvider = null;
+                }
+                
+                renderAISetupScreen();
+            }
+        }
+
+        function updateProviderSelect() {
+            const select = document.getElementById('aiProviderSelect');
+            const connectedProviders = Object.keys(aiConfig);
+            
+            select.innerHTML = '<option value="">Select AI Provider</option>' +
+                connectedProviders.map(key => 
+                    `<option value="${key}">${AI_PROVIDERS[key].name}</option>`
+                ).join('');
+            
+            if (currentAIProvider && aiConfig[currentAIProvider]) {
+                select.value = currentAIProvider;
+                updateModelSelect();
+            } else if (connectedProviders.length === 1) {
+                // Auto-select if only one provider
+                currentAIProvider = connectedProviders[0];
+                select.value = currentAIProvider;
+                updateModelSelect();
+            }
+        }
+
+        function updateModelSelect() {
+            const modelSelect = document.getElementById('aiModelSelect');
+            
+            if (currentAIProvider && aiConfig[currentAIProvider]) {
+                const provider = AI_PROVIDERS[currentAIProvider];
+                const currentModel = aiConfig[currentAIProvider].model;
+                
+                modelSelect.innerHTML = provider.models.map(model => 
+                    `<option value="${model}" ${model === currentModel ? 'selected' : ''}>${model}</option>`
+                ).join('');
+                
+                modelSelect.style.display = 'block';
+            } else {
+                modelSelect.style.display = 'none';
+            }
+        }
+
+        function handleProviderChange() {
+            const select = document.getElementById('aiProviderSelect');
+            currentAIProvider = select.value || null;
+            updateModelSelect();
+        }
+
+        function showChatInterface() {
+            const content = document.getElementById('aiChatContent');
+            content.innerHTML = '<div class="ai-chat-messages" id="aiChatMessages"></div>';
+            
+            // Add welcome message
+            aiChatHistory = [];
+            addAIMessage('system', 'AI Assistant ready! Ask me to modify your resume.');
+        }
+
+        function addAIMessage(role, content) {
+            const messagesContainer = document.getElementById('aiChatMessages');
+            if (!messagesContainer) return;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `ai-message ${role}`;
+            messageDiv.textContent = content;
+            messagesContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            const chatContent = document.getElementById('aiChatContent');
+            chatContent.scrollTop = chatContent.scrollHeight;
+        }
+
+        async function sendAIMessage() {
+            const input = document.getElementById('aiChatInput');
+            const sendButton = document.getElementById('aiSendButton');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            if (!currentAIProvider || !aiConfig[currentAIProvider]) {
+                alert('Please select an AI provider first');
+                return;
+            }
+            
+            // Disable input while processing
+            input.disabled = true;
+            sendButton.disabled = true;
+            
+            // Add user message
+            addAIMessage('user', message);
+            input.value = '';
+            
+            try {
+                // Generate system prompt
+                const systemPrompt = generateSystemPrompt();
+                
+                // Call AI API
+                const response = await callAIProvider(currentAIProvider, systemPrompt, message);
+                
+                // Parse response and apply changes
+                const result = await applyAIResponse(response);
+                
+                if (result.success) {
+                    addAIMessage('assistant', result.message || 'Changes applied successfully!');
+                } else {
+                    addAIMessage('assistant', result.message || 'I made some changes. Please review them.');
+                }
+                
+            } catch (error) {
+                console.error('AI Error:', error);
+                addAIMessage('system', 'Error: ' + error.message);
+            } finally {
+                input.disabled = false;
+                sendButton.disabled = false;
+                input.focus();
+            }
+        }
+
+        function generateSystemPrompt() {
+            const data = getResumeData();
+            
+            return `You are an AI assistant helping to edit a resume. The resume is stored as JSON data following this schema:
+
+SCHEMA v3:
+{
+  "version": 3,
+  "name": "string",
+  "contactInfo": [{"label": "string", "value": "string", "url": "string (optional)"}],
+  "sections": [
+    {
+      "id": "unique-id",
+      "type": "text|bullet|work-history|education",
+      "title": "Section Title",
+      "content": "string (for text/bullet types)",
+      "showTotalYears": boolean (for work-history),
+      "items": [
+        {
+          "id": "unique-id",
+          "title": "string",
+          "subtitle": "string (optional)",
+          "location": "string (optional)",
+          "startDate": "YYYY-MM-DD (ISO8601)",
+          "endDate": "YYYY-MM-DD or empty for current",
+          "description": "string (optional)"
+        }
+      ]
+    }
+  ]
+}
+
+CURRENT RESUME DATA:
+${JSON.stringify(data, null, 2)}
+
+When the user asks you to modify the resume, respond with ONLY valid JSON data following the schema above. Include the complete resume data with your modifications applied. Do not include any explanatory text before or after the JSON - just the raw JSON object.
+
+Examples of modifications you can make:
+- Add/remove/edit sections
+- Update contact information
+- Add/modify work experience
+- Change section titles and content
+- Reorder sections
+- Update dates and descriptions
+
+Always maintain the schema structure and ensure all required fields are present.`;
+        }
+
+        async function callAIProvider(provider, systemPrompt, userMessage) {
+            const config = aiConfig[provider];
+            const providerInfo = AI_PROVIDERS[provider];
+            
+            switch (provider) {
+                case 'openai':
+                    return await callOpenAI(config, providerInfo, systemPrompt, userMessage);
+                case 'anthropic':
+                    return await callAnthropic(config, providerInfo, systemPrompt, userMessage);
+                case 'google':
+                    return await callGoogle(config, providerInfo, systemPrompt, userMessage);
+                case 'github':
+                    return await callGitHubCopilot(config, providerInfo, systemPrompt, userMessage);
+                default:
+                    throw new Error('Unsupported provider');
+            }
+        }
+
+        async function callOpenAI(config, providerInfo, systemPrompt, userMessage) {
+            try {
+                const response = await fetch(providerInfo.endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${config.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: config.model,
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: userMessage }
+                        ],
+                        temperature: 0.7
+                    })
+                });
+                
+                if (!response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const error = await response.json();
+                        throw new Error(error.error?.message || `API request failed (${response.status})`);
+                    } else {
+                        const text = await response.text();
+                        throw new Error(`API request failed (${response.status}): ${text.substring(0, 200)}`);
+                    }
+                }
+                
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+                    throw new Error('Network error - check your connection and API key. Some APIs may not work from browsers due to CORS restrictions.');
+                }
+                throw error;
+            }
+        }
+
+        async function callAnthropic(config, providerInfo, systemPrompt, userMessage) {
+            try {
+                const response = await fetch(providerInfo.endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': config.apiKey,
+                        'anthropic-version': '2023-06-01'
+                    },
+                    body: JSON.stringify({
+                        model: config.model,
+                        max_tokens: 4096,
+                        system: systemPrompt,
+                        messages: [
+                            { role: 'user', content: userMessage }
+                        ]
+                    })
+                });
+                
+                if (!response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const error = await response.json();
+                        throw new Error(error.error?.message || `API request failed (${response.status})`);
+                    } else {
+                        const text = await response.text();
+                        throw new Error(`API request failed (${response.status}): ${text.substring(0, 200)}`);
+                    }
+                }
+                
+                const data = await response.json();
+                return data.content[0].text;
+            } catch (error) {
+                if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+                    throw new Error('Network error - check your connection and API key. Some APIs may not work from browsers due to CORS restrictions.');
+                }
+                throw error;
+            }
+        }
+
+        async function callGoogle(config, providerInfo, systemPrompt, userMessage) {
+            try {
+                const endpoint = `${providerInfo.endpoint}${config.model}:generateContent?key=${config.apiKey}`;
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: `${systemPrompt}\n\nUser request: ${userMessage}`
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.7
+                        }
+                    })
+                });
+                
+                if (!response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const error = await response.json();
+                        throw new Error(error.error?.message || `API request failed (${response.status})`);
+                    } else {
+                        const text = await response.text();
+                        throw new Error(`API request failed (${response.status}): ${text.substring(0, 200)}`);
+                    }
+                }
+                
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+            } catch (error) {
+                if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+                    throw new Error('Network error - check your connection and API key. Some APIs may not work from browsers due to CORS restrictions.');
+                }
+                throw error;
+            }
+        }
+
+        async function callGitHubCopilot(config, providerInfo, systemPrompt, userMessage) {
+            try {
+                const response = await fetch(providerInfo.endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${config.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: config.model,
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: userMessage }
+                        ],
+                        temperature: 0.7
+                    })
+                });
+                
+                if (!response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const error = await response.json();
+                        throw new Error(error.error?.message || `API request failed (${response.status})`);
+                    } else {
+                        const text = await response.text();
+                        throw new Error(`API request failed (${response.status}): ${text.substring(0, 200)}`);
+                    }
+                }
+                
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+                    throw new Error('GitHub Copilot API cannot be accessed directly from browsers due to CORS restrictions. Please use OpenAI, Anthropic, or Google Gemini instead.');
+                }
+                throw error;
+            }
+        }
+
+        async function applyAIResponse(response) {
+            try {
+                // Try to extract JSON from the response
+                let jsonStr = response.trim();
+                
+                // Remove markdown code blocks if present
+                if (jsonStr.startsWith('```')) {
+                    jsonStr = jsonStr.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                }
+                
+                // Parse the JSON
+                const newData = JSON.parse(jsonStr);
+                
+                // Validate it has the required structure
+                if (!newData.version || !newData.name || !newData.contactInfo || !newData.sections) {
+                    throw new Error('Invalid resume data structure');
+                }
+                
+                // Apply the changes
+                loadResumeFromData(newData);
+                
+                return {
+                    success: true,
+                    message: 'Resume updated successfully!'
+                };
+                
+            } catch (error) {
+                console.error('Failed to parse AI response:', error);
+                console.log('Raw response:', response);
+                
+                return {
+                    success: false,
+                    message: 'Failed to apply changes. The AI response was not in the expected format.'
+                };
+            }
+        }
+
+        // Handle Enter key in chat input
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatInput = document.getElementById('aiChatInput');
+            if (chatInput) {
+                chatInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendAIMessage();
+                    }
+                });
+            }
+        });
+
+        // Initialize - try to load from localStorage first
+        window.addEventListener('DOMContentLoaded', () => {
+            // Ensure modal is hidden on page load
+            document.getElementById('closeModal').classList.add('hidden');
+            
+            renderVersionHistory();
+            
+            // Check if user explicitly closed the resume
+            const closedByUser = localStorage.getItem('resumeEditor_closedByUser');
+            
+            if (!closedByUser) {
+                // Only auto-load if user didn't close
+                const loaded = loadFromLocalStorage();
+            }
+            // If user closed or nothing was loaded, welcome dialog is already shown by default
+            
+            // Initialize AI chat
+            initAIChat();
+        });
+    </script>
+
+    <!-- AI Chat UI -->
+    <button id="aiChatButton" class="ai-chat-button" onclick="toggleAIChat()" title="AI Assistant">🤖</button>
+    
+    <div id="aiChatWindow" class="ai-chat-window hidden">
+        <div class="ai-chat-header">
+            <h3>AI Assistant</h3>
+            <button class="ai-chat-close" onclick="toggleAIChat()">×</button>
+        </div>
+        <div class="ai-chat-content" id="aiChatContent">
+            <!-- Content will be dynamically populated -->
+        </div>
+        <div class="ai-chat-controls" id="aiChatControls" style="display: none;">
+            <select id="aiProviderSelect" class="ai-provider-select" onchange="handleProviderChange()">
+                <option value="">Select AI Provider</option>
+            </select>
+            <select id="aiModelSelect" class="ai-provider-select" style="display: none;">
+                <option value="">Select Model</option>
+            </select>
+            <textarea id="aiChatInput" class="ai-chat-input" placeholder="Ask AI to modify your resume..." rows="1"></textarea>
+            <button id="aiSendButton" class="ai-send-button" onclick="sendAIMessage()">Send</button>
+        </div>
+    </div>
+</body>
+</html>
