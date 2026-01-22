@@ -2091,7 +2091,7 @@
                         yearsInfo.style.fontSize = '12px';
                         yearsInfo.style.color = '#666';
                         yearsInfo.style.marginBottom = '10px';
-                        yearsInfo.textContent = `Total: ${totalYears.toFixed(1)} years of experience`;
+                        yearsInfo.textContent = `Total: ${formatYearsOfExperience(totalYears)} of experience`;
                         content.appendChild(yearsInfo);
                     }
                     
@@ -2582,6 +2582,12 @@
             });
             
             return totalMonths / 12;
+        }
+
+        function formatYearsOfExperience(totalYears) {
+            // Round down to nearest multiple of 2
+            const roundedYears = Math.floor(totalYears / 2) * 2;
+            return `${roundedYears}+ years`;
         }
 
         function markModified() {
@@ -3599,7 +3605,7 @@
                     // Calculate total years of experience
                     const totalYears = calculateTotalYears(jobs);
                     const showYears = section.showTotalYears !== false; // Default to true
-                    const yearsDisplay = (showYears && totalYears > 0) ? `<span class="section-header-years">${totalYears.toFixed(1)} years</span>` : '';
+                    const yearsDisplay = (showYears && totalYears > 0) ? `<span class="section-header-years">${formatYearsOfExperience(totalYears)}</span>` : '';
                     
                     // Add section header with total years
                     previewSections.push({
